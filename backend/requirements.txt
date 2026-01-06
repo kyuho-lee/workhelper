@@ -3,3 +3,20 @@ uvicorn==0.40.0
 sqlalchemy==2.0.45
 pymysql==1.1.2
 python-dotenv==1.2.1
+qrcode[pil]==8.0
+python-multipart==0.0.20
+pyjwt==2.10.1
+pandas==2.2.3
+openpyxl==3.1.5
+passlib[bcrypt]==1.7.4
+python-jose==3.3.0
+email-validator==2.1.0
+```
+
+---
+
+**설치 후 서버가 자동으로 재시작됩니다!**
+
+터미널에서 확인:
+```
+INFO:     Application startup complete.
