@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.api import assets, issues, qr, upload, auth, users, comments, statistics, dashboard_config, categories, locations, attachments, notifications, filter_configs, reports 
+from app.core.config import settings
 
 # 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -14,7 +15,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.CORS_ORIGINS,  # ← 이렇게 변경!
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
