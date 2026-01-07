@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.api import assets, issues, qr, upload, auth, users, comments, statistics, dashboard_config, categories, locations, attachments, notifications, filter_configs, reports 
+from app.api import assets, issues, qr, upload, auth, users, comments, statistics, dashboard_config, categories, locations, attachments, notifications, filter_configs, reports, inspections 
 from app.core.config import settings
 
 # 테이블 생성
@@ -38,7 +38,7 @@ app.include_router(notifications.router)  # 추가!
 
 app.include_router(filter_configs.router)  # 추가!
 app.include_router(reports.router)  # 추가!
-
+app.include_router(inspections.router, prefix="/api/inspections", tags=["inspections"])
 
 @app.get("/")
 def read_root():

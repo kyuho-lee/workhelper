@@ -21,10 +21,10 @@ import IssueEdit from './components/IssueEdit';
 import Statistics from './components/Statistics';  
 import DashboardSettings from './components/DashboardSettings'; 
 import Settings from './components/Settings';
-import Notifications from './components/Notifications';  // 추가!
-import Reports from './components/Reports';  // 추가!
-
-
+import Notifications from './components/Notifications';
+import Reports from './components/Reports';
+import MobileQRScanner from './components/MobileQRScanner';
+import InspectionList from './components/InspectionList';  // 추가!
 
 function AppContent() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -86,6 +86,9 @@ function AppContent() {
                   <Link to="/statistics" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                     통계
                   </Link>
+                  <Link to="/inspections" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                    📋 재고실사
+                  </Link>
                   {isAdmin && (
                     <Link to="/settings" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                       ⚙️ 설정
@@ -96,7 +99,7 @@ function AppContent() {
                   </Link>
                 </nav>
                 <div className="flex items-center gap-3">
-                  {/* 알림 아이콘 - 새로 추가! */}
+                  {/* 알림 아이콘 */}
                   <Notifications />
                   
                   <Link 
@@ -105,12 +108,20 @@ function AppContent() {
                   >
                     👤 {user.full_name}
                   </Link>
+
                   <button
                     onClick={toggleDarkMode}
                     className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                     title={darkMode ? '라이트 모드' : '다크 모드'}
                   >
                     {darkMode ? '☀️' : '🌙'}
+                  </button>
+
+                  <button
+                    onClick={logout}
+                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium"
+                  >
+                    로그아웃
                   </button>
                 </div>
               </div>
@@ -137,9 +148,13 @@ function AppContent() {
             <Route path="/statistics" element={<Statistics />} />
             <Route path="/dashboard-settings" element={<DashboardSettings />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/reports" element={<Reports />} />
+            
+            {/* 재고 실사 */}
+            <Route path="/inspections" element={<InspectionList />} />
+            <Route path="/mobile/scan" element={<MobileQRScanner />} />
             
             <Route path="*" element={<Navigate to="/" replace />} />
-            <Route path="/reports" element={<Reports />} />
           </Routes>
         </main>
 
