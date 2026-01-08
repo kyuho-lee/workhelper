@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
-
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -11,22 +9,16 @@ function Notifications() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 토큰이 있을 때만 알림 조회
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUnreadCount();
-      // 30초마다 자동 갱신
-      const interval = setInterval(fetchUnreadCount, 30000);
-      return () => clearInterval(interval);
-    }
+    fetchUnreadCount();
+    // 30초마다 자동 갱신
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return; // 토큰 없으면 종료
-      
-      const response = await axios.get(`${API_URL}/api/notifications/unread-count`, {
+      const response = await axios.get('http://localhost:8000/api/notifications/unread-count', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUnreadCount(response.data.count);
@@ -39,9 +31,7 @@ function Notifications() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      if (!token) return; // 토큰 없으면 종료
-      
-      const response = await axios.get(`${API_URL}/api/notifications?limit=10`, {
+      const response = await axios.get('http://localhost:8000/api/notifications?limit=10', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(response.data);
@@ -62,10 +52,8 @@ function Notifications() {
   const handleMarkAsRead = async (notificationId) => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
-      
       await axios.put(
-        `${API_URL}/api/notifications/${notificationId}/read`,
+        `http://localhost:8000/api/notifications/${notificationId}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -81,10 +69,8 @@ function Notifications() {
   const handleMarkAllAsRead = async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) return;
-      
       await axios.put(
-        `${API_URL}/api/notifications/read-all`,
+        'http://localhost:8000/api/notifications/read-all',
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
