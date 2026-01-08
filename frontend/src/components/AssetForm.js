@@ -66,7 +66,23 @@ function AssetForm() {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/api/assets`, formData);
+      // 🔥 빈 문자열을 null로 변환
+      const cleanedFormData = {
+        ...formData,
+        purchase_date: formData.purchase_date || null,
+        warranty_end_date: formData.warranty_end_date || null,
+        last_inspection_date: formData.last_inspection_date || null,
+        next_inspection_date: formData.next_inspection_date || null,
+        purchase_price: formData.purchase_price || null,
+        serial_number: formData.serial_number || null,
+        manufacturer: formData.manufacturer || null,
+        model: formData.model || null,
+        location: formData.location || null,
+        assigned_to: formData.assigned_to || null,
+        notes: formData.notes || null,
+      };
+      
+      await axios.post(`${API_BASE_URL}/api/assets`, cleanedFormData);
       alert('자산이 등록되었습니다.');
       navigate('/assets');
     } catch (error) {
