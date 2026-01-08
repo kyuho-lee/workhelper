@@ -7,9 +7,9 @@ __pycache__/
 venv/
 env/
 ENV/
-build/
+backend/build/
 develop-eggs/
-dist/
+backend/dist/
 downloads/
 eggs/
 .eggs/
@@ -48,7 +48,7 @@ yarn-error.log*
 .pnp/
 .pnp.js
 coverage/
-build/
+#build/
 .DS_Store
 .env.local
 .env.development.local
