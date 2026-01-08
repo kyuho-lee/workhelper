@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from './config/api';
 
 function Reports() {
   const { user } = useAuth();
@@ -69,7 +70,7 @@ function Reports() {
       if (startDate) params.start_date = startDate.toISOString();
       if (endDate) params.end_date = endDate.toISOString();
 
-      const response = await axios.get('http://localhost:8000/api/reports/combined-summary', {
+      const response = await axios.get('${API_BASE_URL}/api/reports/combined-summary', {
         headers: { Authorization: `Bearer ${token}` },
         params
       });

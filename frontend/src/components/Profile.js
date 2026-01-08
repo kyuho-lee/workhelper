@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from './config/api';
 
 function Profile() {
   const { user, logout } = useAuth();
@@ -46,7 +47,7 @@ function Profile() {
     }
 
     try {
-      await axios.put('http://localhost:8000/api/auth/change-password', {
+      await axios.put('${API_BASE_URL}/api/auth/change-password', {
         current_password: passwordData.current_password,
         new_password: passwordData.new_password
       });

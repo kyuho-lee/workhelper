@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from './config/api';
 
 function Settings() {
   const { isAdmin } = useAuth();
@@ -21,7 +22,7 @@ function Settings() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/categories');
+      const response = await axios.get('${API_BASE_URL}/api/categories');
       setCategories(response.data);
       setLoadingCategories(false);
     } catch (error) {
@@ -32,7 +33,7 @@ function Settings() {
 
   const fetchLocations = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/locations');
+      const response = await axios.get('${API_BASE_URL}/api/locations');
       setLocations(response.data);
       setLoadingLocations(false);
     } catch (error) {
@@ -50,7 +51,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:8000/api/categories', newCategory, {
+      await axios.post('${API_BASE_URL}/api/categories', newCategory, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -72,7 +73,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:8000/api/locations', newLocation, {
+      await axios.post('${API_BASE_URL}/api/locations', newLocation, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -90,7 +91,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/categories/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/categories/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchCategories();
@@ -105,7 +106,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/locations/${id}`, {
+      await axios.delete(`${API_BASE_URL}/api/locations/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchLocations();

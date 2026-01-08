@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Html5Qrcode } from 'html5-qrcode';
+import API_BASE_URL from './config/api';
 
 function MobileQRScanner() {
   const { user } = useAuth();

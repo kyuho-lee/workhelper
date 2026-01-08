@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import API_BASE_URL from './config/api';
 
 function UserManagement() {
   const { user, isAdmin } = useAuth();
@@ -20,7 +21,7 @@ function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/users');
+      const response = await axios.get('${API_BASE_URL}/api/users');
       setUsers(response.data);
       setLoading(false);
     } catch (error) {
@@ -37,7 +38,7 @@ function UserManagement() {
 
     if (window.confirm(`'${username}' 사용자의 비밀번호를 초기화하시겠습니까?`)) {
       try {
-        const response = await axios.put(`http://localhost:8000/api/users/${userId}/reset-password`);
+        const response = await axios.put(`${API_BASE_URL}/api/users/${userId}/reset-password`);
         
         alert(
           `비밀번호가 초기화되었습니다.\n\n` +
@@ -59,7 +60,7 @@ function UserManagement() {
 
     if (window.confirm(`정말 '${username}' 사용자를 삭제하시겠습니까?`)) {
       try {
-        await axios.delete(`http://localhost:8000/api/users/${userId}`);
+        await axios.delete(`${API_BASE_URL}/api/users/${userId}`);
         alert('사용자가 삭제되었습니다.');
         fetchUsers();
       } catch (error) {

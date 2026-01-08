@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
+import API_BASE_URL from './config/api';
 
 function Register() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ function Register() {
     setLoading(true);
 
     try {
-      await axios.post('http://localhost:8000/api/auth/register', {
+      await axios.post('${API_BASE_URL}/api/auth/register', {
         username: formData.username,
         email: formData.email,
         full_name: formData.full_name,

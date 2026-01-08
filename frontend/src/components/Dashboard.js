@@ -15,6 +15,7 @@ import {
   OldUnresolvedIssuesWidget,
   PeriodComparisonWidget
 } from './Top3Widgets';
+import API_BASE_URL from './config/api';
 
 function Dashboard() {
   const { isAdmin } = useAuth();
@@ -45,13 +46,13 @@ function Dashboard() {
         oldIssuesRes,     // 추가!
         comparisonRes     // 추가!
       ] = await Promise.all([
-        axios.get('http://localhost:8000/api/statistics/dashboard', config),
-        axios.get('http://localhost:8000/api/dashboard-config', config),
-        axios.get('http://localhost:8000/api/assets', config),
-        axios.get('http://localhost:8000/api/issues', config),
-        axios.get('http://localhost:8000/api/statistics/assignee-workload', config),              // 추가!
-        axios.get('http://localhost:8000/api/statistics/old-unresolved-issues?limit=5', config), // 추가!
-        axios.get('http://localhost:8000/api/statistics/period-comparison', config)              // 추가!
+        axios.get('${API_BASE_URL}/api/statistics/dashboard', config),
+        axios.get('${API_BASE_URL}/api/dashboard-config', config),
+        axios.get('${API_BASE_URL}/api/assets', config),
+        axios.get('${API_BASE_URL}/api/issues', config),
+        axios.get('${API_BASE_URL}/api/statistics/assignee-workload', config),              // 추가!
+        axios.get('${API_BASE_URL}/api/statistics/old-unresolved-issues?limit=5', config), // 추가!
+        axios.get('${API_BASE_URL}/api/statistics/period-comparison', config)              // 추가!
       ]);
 
       setStats(statsRes.data);

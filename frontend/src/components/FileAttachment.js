@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { saveAs } from 'file-saver';  // FileSaver.js import
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from './config/api';
 
 function FileAttachment({ entityType, entityId }) {
   const { user, isAdmin } = useAuth();
@@ -16,7 +17,7 @@ function FileAttachment({ entityType, entityId }) {
   const fetchAttachments = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/attachments/${entityType}/${entityId}`
+        `${API_BASE_URL}/api/attachments/${entityType}/${entityId}`
       );
       setAttachments(response.data);
     } catch (error) {
@@ -49,7 +50,7 @@ function FileAttachment({ entityType, entityId }) {
       const token = localStorage.getItem('token');
       
       await axios.post(
-        `http://localhost:8000/api/attachments?entity_type=${entityType}&entity_id=${entityId}`,
+        `${API_BASE_URL}/api/attachments?entity_type=${entityType}&entity_id=${entityId}`,
         formData,
         {
           headers: {
@@ -77,7 +78,7 @@ function FileAttachment({ entityType, entityId }) {
       
       // axios로 blob 다운로드
       const response = await axios.get(
-        `http://localhost:8000/api/attachments/download/${attachment.id}`,
+        `${API_BASE_URL}/api/attachments/download/${attachment.id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -108,7 +109,7 @@ function FileAttachment({ entityType, entityId }) {
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
-        `http://localhost:8000/api/attachments/${attachmentId}`,
+        `${API_BASE_URL}/api/attachments/${attachmentId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

@@ -7,6 +7,7 @@ import {
   PriorityPieChart,
   CategoryBarChart
 } from './Charts';
+import API_BASE_URL from './config/api';
 
 function Statistics() {
   const [stats, setStats] = useState(null);
@@ -18,7 +19,7 @@ function Statistics() {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/statistics/dashboard');
+      const response = await axios.get('${API_BASE_URL}/api/statistics/dashboard');
       setStats(response.data);
       setLoading(false);
     } catch (error) {

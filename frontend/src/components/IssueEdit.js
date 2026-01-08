@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import Comments from './Comments';
 import FileAttachment from './FileAttachment';
+import API_BASE_URL from './config/api';
 
 function IssueEdit() {
   const { id } = useParams();
@@ -26,7 +27,7 @@ function IssueEdit() {
 
   const fetchIssue = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/issues/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/api/issues/${id}`);
       setFormData(response.data);
       setLoading(false);
     } catch (error) {
@@ -38,7 +39,7 @@ function IssueEdit() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/users/simple-list', {
+      const response = await axios.get('${API_BASE_URL}/api/users/simple-list', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
@@ -63,7 +64,7 @@ function IssueEdit() {
     }
 
     try {
-      await axios.put(`http://localhost:8000/api/issues/${id}`, formData);
+      await axios.put(`${API_BASE_URL}/api/issues/${id}`, formData);
       alert('장애가 수정되었습니다.');
       navigate('/issues');
     } catch (error) {

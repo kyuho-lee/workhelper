@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_BASE_URL from './config/api';
 
 function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
   const [filters, setFilters] = useState([]);
@@ -41,7 +42,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `http://localhost:8000/api/filter-configs?entity_type=${entityType}&active_only=false`,
+        `${API_BASE_URL}/api/filter-configs?entity_type=${entityType}&active_only=false`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setFilters(response.data);
@@ -68,7 +69,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:8000/api/filter-configs', newFilter, {
+      await axios.post('${API_BASE_URL}/api/filter-configs', newFilter, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -94,7 +95,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://localhost:8000/api/filter-configs/${filterId}`,
+        `${API_BASE_URL}/api/filter-configs/${filterId}`,
         { is_active: !currentStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -109,7 +110,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/filter-configs/${filterId}`, {
+      await axios.delete(`${API_BASE_URL}/api/filter-configs/${filterId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('필터가 삭제되었습니다.');
@@ -130,7 +131,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `http://localhost:8000/api/filter-configs/${filterId}/options`,
+        `${API_BASE_URL}/api/filter-configs/${filterId}/options`,
         optionInput,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -152,7 +153,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/filter-configs/options/${optionId}`, {
+      await axios.delete(`${API_BASE_URL}/api/filter-configs/options/${optionId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       fetchFilters();

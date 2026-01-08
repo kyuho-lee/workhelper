@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Comments from './Comments';  // 추가
 import FileAttachment from './FileAttachment';  // 추가!
+import API_BASE_URL from './config/api';
 
 function AssetDetail() {
   const { id } = useParams();
@@ -19,8 +20,8 @@ function AssetDetail() {
   const fetchAssetData = async () => {
     try {
       const [assetRes, issuesRes] = await Promise.all([
-        axios.get(`http://localhost:8000/api/assets/${id}`),
-        axios.get(`http://localhost:8000/api/assets/${id}/issues`)
+        axios.get(`${API_BASE_URL}/api/assets/${id}`),
+        axios.get(`${API_BASE_URL}/api/assets/${id}/issues`)
       ]);
       setAsset(assetRes.data);
       setRelatedIssues(issuesRes.data);
@@ -33,7 +34,7 @@ function AssetDetail() {
 
   const downloadQR = async () => {
   try {
-    const response = await fetch(`http://localhost:8000/api/qr/generate/${asset.asset_number}`);
+    const response = await fetch(`${API_BASE_URL}/api/qr/generate/${asset.asset_number}`);
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -311,7 +312,7 @@ function AssetDetail() {
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 text-center">
             <h3 className="text-lg font-semibold dark:text-white mb-4">QR 코드</h3>
             <img
-              src={`http://localhost:8000/api/qr/generate/${asset.asset_number}`}
+              src={`${API_BASE_URL}/api/qr/generate/${asset.asset_number}`}
               alt="QR Code"
               className="mx-auto mb-4 border dark:border-gray-700 p-2 bg-white"
             />

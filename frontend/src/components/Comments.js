@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from './config/api';
 
 function Comments({ targetType, targetId }) {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ function Comments({ targetType, targetId }) {
 
   const fetchComments = async () => {
     try {
-      const response = await axios.get(`http://localhost:8000/api/comments/${targetType}/${targetId}`);
+      const response = await axios.get(`${API_BASE_URL}/api/comments/${targetType}/${targetId}`);
       setComments(response.data);
       setLoading(false);
     } catch (error) {
@@ -34,7 +35,7 @@ function Comments({ targetType, targetId }) {
     }
 
     try {
-      await axios.post(`http://localhost:8000/api/comments/${targetType}/${targetId}`, {
+      await axios.post(`${API_BASE_URL}/api/comments/${targetType}/${targetId}`, {
         content: newComment
       });
       
@@ -57,7 +58,7 @@ function Comments({ targetType, targetId }) {
     }
 
     try {
-      await axios.put(`http://localhost:8000/api/comments/${commentId}`, {
+      await axios.put(`${API_BASE_URL}/api/comments/${commentId}`, {
         content: editContent
       });
       
@@ -75,7 +76,7 @@ function Comments({ targetType, targetId }) {
     }
 
     try {
-      await axios.delete(`http://localhost:8000/api/comments/${commentId}`);
+      await axios.delete(`${API_BASE_URL}/api/comments/${commentId}`);
       fetchComments();
     } catch (error) {
       alert('댓글 삭제 실패: ' + (error.response?.data?.detail || error.message));

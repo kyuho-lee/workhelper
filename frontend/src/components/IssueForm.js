@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from './config/api';
 
 function IssueForm() {
   const navigate = useNavigate();
@@ -27,7 +28,7 @@ function IssueForm() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/users/simple-list', {  // ← simple-list 사용!
+      const response = await axios.get('${API_BASE_URL}/api/users/simple-list', {  // ← simple-list 사용!
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
@@ -52,13 +53,13 @@ function IssueForm() {
     }
 
     try {
-      await axios.post('http://localhost:8000/api/issues', formData);
+      await axios.post('${API_BASE_URL}/api/issues', formData);
       alert('장애가 등록되었습니다.');
       
       // 관련 자산이 있으면 자산 상세로, 없으면 장애 목록으로
       if (formData.asset_number) {
         // 자산번호로 자산 ID 찾기
-        const assetsRes = await axios.get('http://localhost:8000/api/assets');
+        const assetsRes = await axios.get('${API_BASE_URL}/api/assets');
         const asset = assetsRes.data.find(a => a.asset_number === formData.asset_number);
         if (asset) {
           navigate(`/assets/${asset.id}`);

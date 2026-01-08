@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; // 추가!
+import API_BASE_URL from './config/api';
 
 function IssueList() {
   const { isAdmin } = useAuth(); // 추가!
@@ -31,7 +32,7 @@ function IssueList() {
 
   const fetchIssues = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/issues');
+      const response = await axios.get('${API_BASE_URL}/api/issues');
       setIssues(response.data);
       setLoading(false);
     } catch (error) {
@@ -81,7 +82,7 @@ function IssueList() {
   const deleteIssue = async (id) => {
     if (window.confirm('정말 삭제하시겠습니까?')) {
       try {
-        await axios.delete(`http://localhost:8000/api/issues/${id}`);
+        await axios.delete(`${API_BASE_URL}/api/issues/${id}`);
         fetchIssues();
       } catch (error) {
         alert('삭제 실패');
@@ -127,7 +128,7 @@ function IssueList() {
       try {
         const token = localStorage.getItem('token');
         
-        await axios.delete('http://localhost:8000/api/issues/bulk-delete', {
+        await axios.delete('${API_BASE_URL}/api/issues/bulk-delete', {
           headers: { Authorization: `Bearer ${token}` },
           data: { issue_ids: selectedIssues }
         });

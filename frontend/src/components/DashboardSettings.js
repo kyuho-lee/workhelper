@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import WidgetConfigModal from './WidgetConfigModal';
+import API_BASE_URL from './config/api';
 
 function DashboardSettings() {
   const { user, isAdmin } = useAuth();
@@ -25,7 +26,7 @@ function DashboardSettings() {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const response = await axios.get('http://localhost:8000/api/dashboard-config', config);
+      const response = await axios.get('${API_BASE_URL}/api/dashboard-config', config);
       console.log('위젯 개수:', response.data.length);
       console.log('위젯 목록:', response.data.map(w => w.widget_name));
       setWidgets(response.data);
@@ -40,7 +41,7 @@ function DashboardSettings() {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.put(`http://localhost:8000/api/dashboard-config/${widgetId}`, {
+      await axios.put(`${API_BASE_URL}/api/dashboard-config/${widgetId}`, {
         is_visible: !currentVisibility
       }, config);
       fetchWidgets();
@@ -79,7 +80,7 @@ function DashboardSettings() {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post('http://localhost:8000/api/dashboard-config/reorder', widgetOrders, config);
+      await axios.post('${API_BASE_URL}/api/dashboard-config/reorder', widgetOrders, config);
       setDraggedItem(null);
       fetchWidgets();
     } catch (error) {
@@ -101,7 +102,7 @@ function DashboardSettings() {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
       const response = await axios.put(
-        `http://localhost:8000/api/dashboard-config/${widgetId}`, 
+        `${API_BASE_URL}/api/dashboard-config/${widgetId}`, 
         {
           config_data: configData
         },
@@ -132,7 +133,7 @@ function DashboardSettings() {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.post('http://localhost:8000/api/dashboard-config/reset', {}, config);
+      await axios.post('${API_BASE_URL}/api/dashboard-config/reset', {}, config);
       alert('설정이 초기화되었습니다.');
       fetchWidgets();
     } catch (error) {

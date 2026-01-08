@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Chart from 'chart.js/auto';
+import API_BASE_URL from './config/api';
 
 // 🎨 확장된 색상 팔레트 (13가지)
 const getChartColors = (color) => {

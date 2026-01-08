@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import API_BASE_URL from './config/api';
 
 function AssetEdit() {
   const { id } = useParams();
@@ -31,9 +32,9 @@ function AssetEdit() {
     try {
       // 자산 정보, 카테고리, 위치를 동시에 가져오기
       const [assetRes, categoriesRes, locationsRes] = await Promise.all([
-        axios.get(`http://localhost:8000/api/assets/${id}`),
-        axios.get('http://localhost:8000/api/categories'),
-        axios.get('http://localhost:8000/api/locations')
+        axios.get(`${API_BASE_URL}/api/assets/${id}`),
+        axios.get('${API_BASE_URL}/api/categories'),
+        axios.get('${API_BASE_URL}/api/locations')
       ]);
       
       const asset = assetRes.data;
@@ -76,7 +77,7 @@ function AssetEdit() {
     }
 
     try {
-      await axios.put(`http://localhost:8000/api/assets/${id}`, formData);
+      await axios.put(`${API_BASE_URL}/api/assets/${id}`, formData);
       alert('자산이 수정되었습니다.');
       navigate(`/assets/${id}`);
     } catch (error) {
