@@ -96,7 +96,7 @@ function MobileQRScanner() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/inspections/stats`,
+        `${API_BASE_URL}/api/inspections/stats`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
       setStats(response.data);
@@ -109,7 +109,7 @@ function MobileQRScanner() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/api/inspections/scan/${assetNumber}`,
+        `${API_BASE_URL}/api/inspections/scan/${assetNumber}`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
 
@@ -155,7 +155,7 @@ function MobileQRScanner() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${process.env.REACT_APP_API_URL}/api/inspections/scan`,
+        `${API_BASE_URL}/api/inspections/scan`,
         {
           asset_number: scannedAsset.asset_number,
           status: formData.status,

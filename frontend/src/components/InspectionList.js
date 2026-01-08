@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import * as XLSX from 'xlsx';
+import API_BASE_URL from './config/api'; 
 
 function InspectionList() {
   const { isAdmin } = useAuth();
@@ -34,7 +35,7 @@ function InspectionList() {
   const fetchInspections = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/inspections/`, {
+      const response = await axios.get(`${API_BASE_URL}/api/inspections/`, {
         headers: { Authorization: `Bearer ${token}` },
         params: { limit: 1000 }
       });
@@ -49,7 +50,7 @@ function InspectionList() {
   const fetchCampaigns = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/inspections/campaigns`, {
+      const response = await axios.get(`${API_BASE_URL}/api/inspections/campaigns`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCampaigns(response.data);
