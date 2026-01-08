@@ -24,11 +24,12 @@ import Settings from './components/Settings';
 import Notifications from './components/Notifications';
 import Reports from './components/Reports';
 import MobileQRScanner from './components/MobileQRScanner';
-import InspectionList from './components/InspectionList';  // 추가!
+import InspectionList from './components/InspectionList';
 
 function AppContent() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
   const [darkMode, setDarkMode] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const savedMode = localStorage.getItem('darkMode');
@@ -47,6 +48,14 @@ function AppContent() {
       document.documentElement.classList.remove('dark');
       localStorage.setItem('darkMode', 'false');
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setMobileMenuOpen(!mobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   // 로그인하지 않은 경우
@@ -69,10 +78,13 @@ function AppContent() {
         <header className="bg-white dark:bg-gray-800 shadow print:hidden">
           <div className="max-w-7xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
-              <Link to="/" className="text-3xl font-bold text-gray-900 dark:text-white">
+              {/* 로고 */}
+              <Link to="/" className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 WorkHelper
               </Link>
-              <div className="flex items-center gap-6">
+
+              {/* 데스크톱 네비게이션 (md 이상에서만 표시) */}
+              <div className="hidden md:flex items-center gap-6">
                 <nav className="flex gap-6">
                   <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                     대시보드
@@ -98,6 +110,7 @@ function AppContent() {
                     보고서
                   </Link>
                 </nav>
+                
                 <div className="flex items-center gap-3">
                   {/* 알림 아이콘 */}
                   <Notifications />
@@ -125,7 +138,124 @@ function AppContent() {
                   </button>
                 </div>
               </div>
+
+              {/* 모바일 메뉴 버튼 & 우측 아이콘 (md 미만에서만 표시) */}
+              <div className="flex md:hidden items-center gap-3">
+                {/* 알림 */}
+                <Notifications />
+                
+                {/* 다크모드 토글 */}
+                <button
+                  onClick={toggleDarkMode}
+                  className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  title={darkMode ? '라이트 모드' : '다크 모드'}
+                >
+                  {darkMode ? '☀️' : '🌙'}
+                </button>
+
+                {/* 햄버거 메뉴 버튼 */}
+                <button
+                  onClick={toggleMobileMenu}
+                  className="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  aria-label="메뉴"
+                >
+                  <svg
+                    className="w-6 h-6 text-gray-700 dark:text-gray-300"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    {mobileMenuOpen ? (
+                      <path d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                </button>
+              </div>
             </div>
+
+            {/* 모바일 드롭다운 메뉴 */}
+            {mobileMenuOpen && (
+              <div className="md:hidden mt-4 pb-4 border-t dark:border-gray-700 pt-4">
+                <nav className="flex flex-col gap-3">
+                  <Link 
+                    to="/" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    🏠 대시보드
+                  </Link>
+                  <Link 
+                    to="/assets" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    💼 자산관리
+                  </Link>
+                  <Link 
+                    to="/issues" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    🚨 장애처리
+                  </Link>
+                  <Link 
+                    to="/statistics" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    📊 통계
+                  </Link>
+                  <Link 
+                    to="/inspections" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    📋 재고실사
+                  </Link>
+                  {isAdmin && (
+                    <Link 
+                      to="/settings" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      ⚙️ 설정
+                    </Link>
+                  )}
+                  <Link 
+                    to="/reports" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    📄 보고서
+                  </Link>
+                  
+                  <div className="border-t dark:border-gray-700 my-2"></div>
+                  
+                  <Link 
+                    to="/profile" 
+                    onClick={closeMobileMenu}
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                  >
+                    👤 {user.full_name}
+                  </Link>
+                  
+                  <button
+                    onClick={() => {
+                      logout();
+                      closeMobileMenu();
+                    }}
+                    className="text-left text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 font-medium py-2"
+                  >
+                    🚪 로그아웃
+                  </button>
+                </nav>
+              </div>
+            )}
           </div>
         </header>
 

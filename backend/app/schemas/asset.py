@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional
+from decimal import Decimal
 
 class AssetBase(BaseModel):
     asset_number: str
@@ -12,6 +13,11 @@ class AssetBase(BaseModel):
     location: Optional[str] = None
     assigned_to: Optional[str] = None
     purchase_date: Optional[datetime] = None
+    serial_number: Optional[str] = None
+    purchase_price: Optional[Decimal] = None
+    warranty_end_date: Optional[date] = None
+    last_inspection_date: Optional[date] = None
+    next_inspection_date: Optional[date] = None
     notes: Optional[str] = None
 
 class AssetCreate(AssetBase):
@@ -26,6 +32,11 @@ class AssetUpdate(BaseModel):
     location: Optional[str] = None
     assigned_to: Optional[str] = None
     purchase_date: Optional[datetime] = None
+    serial_number: Optional[str] = None
+    purchase_price: Optional[Decimal] = None
+    warranty_end_date: Optional[date] = None
+    last_inspection_date: Optional[date] = None
+    next_inspection_date: Optional[date] = None
     notes: Optional[str] = None
 
 class Asset(AssetBase):

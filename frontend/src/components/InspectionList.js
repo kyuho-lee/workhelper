@@ -62,9 +62,11 @@ function InspectionList() {
   const filterInspections = () => {
     let filtered = [...inspections];
 
-    // 검색어 필터
+    // 검색어 필터 (자산번호, 자산명, 점검자, 위치)
     if (filters.searchTerm) {
       filtered = filtered.filter(inspection =>
+        inspection.asset?.asset_number?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        inspection.asset?.name?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         inspection.inspector_name?.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
         inspection.actual_location?.toLowerCase().includes(filters.searchTerm.toLowerCase())
       );
@@ -101,13 +103,28 @@ function InspectionList() {
     });
   };
 
+  const formatCurrency = (value) => {
+    if (!value) return '-';
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW'
+    }).format(value);
+  };
+
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       filteredInspections.map(inspection => ({
         '실사일시': new Date(inspection.inspection_date).toLocaleString('ko-KR'),
+        '자산번호': inspection.asset?.asset_number || '',
+        '자산명': inspection.asset?.name || '',
+        '제조사': inspection.asset?.manufacturer || '',
+        '모델': inspection.asset?.model || '',
+        '시리얼번호': inspection.asset?.serial_number || '',
+        '구매가격': inspection.asset?.purchase_price || '',
         '점검자': inspection.inspector_name,
-        '상태': inspection.status,
+        '실사상태': inspection.status,
         '실제위치': inspection.actual_location || '',
+        '등록위치': inspection.asset?.location || '',
         '메모': inspection.condition_notes || ''
       }))
     );
@@ -165,7 +182,7 @@ function InspectionList() {
             </label>
             <input
               type="text"
-              placeholder="점검자, 위치로 검색..."
+              placeholder="자산번호, 자산명, 점검자..."
               value={filters.searchTerm}
               onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-4 py-2 dark:bg-gray-700 dark:text-white"
@@ -256,50 +273,70 @@ function InspectionList() {
           </div>
         ) : (
           <>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                    실사일시
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                    점검자
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                    상태
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                    실제위치
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                    메모
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {currentItems.map((inspection) => (
-                  <tr key={inspection.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {new Date(inspection.inspection_date).toLocaleString('ko-KR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {inspection.inspector_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(inspection.status)}`}>
-                        {inspection.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {inspection.actual_location || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
-                      {inspection.condition_notes || '-'}
-                    </td>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      실사일시
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      자산번호
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      자산명
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      시리얼번호
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      점검자
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      실사상태
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      실제위치
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
+                      메모
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {currentItems.map((inspection) => (
+                    <tr key={inspection.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {new Date(inspection.inspection_date).toLocaleString('ko-KR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                        {inspection.asset?.asset_number || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {inspection.asset?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {inspection.asset?.serial_number || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {inspection.inspector_name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(inspection.status)}`}>
+                          {inspection.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {inspection.actual_location || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
+                        {inspection.condition_notes || '-'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {totalPages > 1 && (
               <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">

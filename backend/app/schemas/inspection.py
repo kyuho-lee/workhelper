@@ -1,6 +1,27 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime, date
+from decimal import Decimal
+
+# 자산 정보 (실사 목록용 간단 버전)
+class AssetSimple(BaseModel):
+    id: int
+    asset_number: str
+    name: str
+    category: str
+    manufacturer: Optional[str] = None
+    model: Optional[str] = None
+    status: str
+    location: Optional[str] = None
+    serial_number: Optional[str] = None
+    purchase_price: Optional[Decimal] = None
+    purchase_date: Optional[datetime] = None
+    warranty_end_date: Optional[date] = None
+    last_inspection_date: Optional[date] = None
+    next_inspection_date: Optional[date] = None
+    
+    class Config:
+        from_attributes = True
 
 # Inspection Campaign Schemas
 class InspectionCampaignBase(BaseModel):
@@ -41,6 +62,9 @@ class InventoryInspection(InventoryInspectionBase):
     inspector_name: str
     photo_url: Optional[str]
     created_at: datetime
+    
+    # 자산 정보 추가
+    asset: Optional[AssetSimple] = None
     
     class Config:
         from_attributes = True

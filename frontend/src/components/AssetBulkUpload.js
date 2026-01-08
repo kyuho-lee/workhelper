@@ -21,7 +21,12 @@ function AssetBulkUpload() {
         '상태': '정상',
         '위치': '본사 2층',
         '담당자': '홍길동',
+        '시리얼번호': 'SN123456789',
+        '구매가격': '1500000',
         '구매일': '2024-01-15',
+        '보증종료일': '2025-12-31',
+        '마지막점검': '2024-01-15',
+        '다음점검': '2024-07-15',
         '메모': '신규 구매'
       },
       {
@@ -33,7 +38,12 @@ function AssetBulkUpload() {
         '상태': '정상',
         '위치': '본사 3층',
         '담당자': '김철수',
+        '시리얼번호': 'SN987654321',
+        '구매가격': '500000',
         '구매일': '2024-01-20',
+        '보증종료일': '2025-06-30',
+        '마지막점검': '',
+        '다음점검': '',
         '메모': ''
       }
     ];
@@ -103,10 +113,20 @@ function AssetBulkUpload() {
         <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 mb-4">
           <li>아래 "템플릿 다운로드" 버튼을 클릭하여 엑셀 템플릿을 다운로드합니다.</li>
           <li>템플릿 파일을 열고 자산 정보를 입력합니다.</li>
-          <li>필수 항목: 자산번호, 이름, 분류, 상태</li>
+          <li><strong>필수 항목:</strong> 자산번호, 이름, 분류, 상태</li>
           <li>상태는 "정상", "수리중", "폐기" 중 하나여야 합니다.</li>
           <li>작성한 파일을 업로드합니다.</li>
         </ol>
+
+        <div className="bg-blue-50 dark:bg-blue-900 p-4 rounded mb-4">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">💡 새로운 필드 안내</h4>
+          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1">
+            <li>• <strong>시리얼번호:</strong> 제품의 고유 시리얼 번호</li>
+            <li>• <strong>구매가격:</strong> 숫자만 입력 (예: 1500000)</li>
+            <li>• <strong>보증종료일:</strong> 날짜 형식 (예: 2025-12-31)</li>
+            <li>• <strong>마지막점검/다음점검:</strong> 점검 일정 관리</li>
+          </ul>
+        </div>
         
         <button
           onClick={downloadTemplate}
@@ -120,12 +140,12 @@ function AssetBulkUpload() {
         <h3 className="text-lg font-semibold dark:text-white mb-4">파일 업로드</h3>
         
         <div className="mb-4">
-            <label className="block">
+          <label className="block">
             <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-gray-500 dark:text-gray-400
+              type="file"
+              accept=".xlsx,.xls"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-500 dark:text-gray-400
                 file:mr-4 file:py-2 file:px-4
                 file:rounded file:border-0
                 file:text-sm file:font-semibold
@@ -138,7 +158,7 @@ function AssetBulkUpload() {
                 file:shadow-sm hover:file:shadow-md
                 cursor-pointer"
             />
-            </label>
+          </label>
         </div>
 
         {file && (
@@ -150,17 +170,17 @@ function AssetBulkUpload() {
         )}
 
         <button
-            onClick={handleUpload}
-            disabled={!file || uploading}
-            className={`px-6 py-2 rounded text-white transition-all duration-200 ${
+          onClick={handleUpload}
+          disabled={!file || uploading}
+          className={`px-6 py-2 rounded text-white transition-all duration-200 ${
             !file || uploading
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600 hover:shadow-md'
-            }`}
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600 hover:shadow-md'
+          }`}
         >
-            {uploading ? '⏳ 업로드 중...' : '📤 업로드 시작'}
+          {uploading ? '⏳ 업로드 중...' : '📤 업로드 시작'}
         </button>
-        </div>
+      </div>
 
       {result && (
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">

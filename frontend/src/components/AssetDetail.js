@@ -20,8 +20,8 @@ function AssetDetail() {
   const fetchAssetData = async () => {
     try {
       const [assetRes, issuesRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/api/assets/${id}`),
-        axios.get(`${API_BASE_URL}/api/api/assets/${id}/issues`)
+        axios.get(`${API_BASE_URL}/api/assets/${id}`),
+        axios.get(`${API_BASE_URL}/api/assets/${id}/issues`)
       ]);
       setAsset(assetRes.data);
       setRelatedIssues(issuesRes.data);
@@ -34,7 +34,7 @@ function AssetDetail() {
 
   const downloadQR = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/qr/generate/${asset.asset_number}`);
+      const response = await fetch(`${API_BASE_URL}/api/qr/download/${asset.asset_number}`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -48,6 +48,16 @@ function AssetDetail() {
       alert('QR 코드 다운로드 실패');
       console.error('QR download error:', error);
     }
+  };
+
+  const formatCurrency = (value) => {
+    if (!value) return '-';
+    return `₩${Number(value).toLocaleString('ko-KR')}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('ko-KR');
   };
 
   const getStatusColor = (status) => {
@@ -104,10 +114,10 @@ function AssetDetail() {
         <div className="lg:col-span-2">
           {/* 탭 버튼 */}
           <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
-            <div className="flex gap-4">
+            <div className="flex gap-4 overflow-x-auto">
               <button
                 onClick={() => setActiveTab('info')}
-                className={`pb-3 px-2 ${
+                className={`pb-3 px-2 whitespace-nowrap ${
                   activeTab === 'info'
                     ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -117,7 +127,7 @@ function AssetDetail() {
               </button>
               <button
                 onClick={() => setActiveTab('issues')}
-                className={`pb-3 px-2 ${
+                className={`pb-3 px-2 whitespace-nowrap ${
                   activeTab === 'issues'
                     ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -127,7 +137,7 @@ function AssetDetail() {
               </button>
               <button
                 onClick={() => setActiveTab('history')}
-                className={`pb-3 px-2 ${
+                className={`pb-3 px-2 whitespace-nowrap ${
                   activeTab === 'history'
                     ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -137,7 +147,7 @@ function AssetDetail() {
               </button>
               <button
                 onClick={() => setActiveTab('comments')}
-                className={`pb-3 px-2 ${
+                className={`pb-3 px-2 whitespace-nowrap ${
                   activeTab === 'comments'
                     ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -147,7 +157,7 @@ function AssetDetail() {
               </button>
               <button
                 onClick={() => setActiveTab('attachments')}
-                className={`pb-3 px-2 ${
+                className={`pb-3 px-2 whitespace-nowrap ${
                   activeTab === 'attachments'
                     ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 font-medium'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -162,66 +172,126 @@ function AssetDetail() {
           <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
             {/* 기본 정보 탭 */}
             {activeTab === 'info' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold dark:text-white mb-4">자산 정보</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">자산번호</span>
-                    <p className="font-medium dark:text-white">{asset.asset_number}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">이름</span>
-                    <p className="font-medium dark:text-white">{asset.name}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">분류</span>
-                    <p className="font-medium dark:text-white">{asset.category}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">제조사</span>
-                    <p className="font-medium dark:text-white">{asset.manufacturer || '-'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">모델</span>
-                    <p className="font-medium dark:text-white">{asset.model || '-'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">상태</span>
-                    <p>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        asset.status === '정상' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                        asset.status === '수리중' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
-                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                      }`}>
-                        {asset.status}
-                      </span>
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">위치</span>
-                    <p className="font-medium dark:text-white">{asset.location || '-'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">담당자</span>
-                    <p className="font-medium dark:text-white">{asset.assigned_to || '-'}</p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">구매일</span>
-                    <p className="font-medium dark:text-white">
-                      {asset.purchase_date ? new Date(asset.purchase_date).toLocaleDateString('ko-KR') : '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <span className="text-sm text-gray-600 dark:text-gray-400">등록일</span>
-                    <p className="font-medium dark:text-white">
-                      {new Date(asset.created_at).toLocaleDateString('ko-KR')}
-                    </p>
+              <div className="space-y-6">
+                {/* 기본 정보 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b dark:border-gray-700">
+                    📌 기본 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">자산번호</span>
+                      <p className="font-medium dark:text-white">{asset.asset_number}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">이름</span>
+                      <p className="font-medium dark:text-white">{asset.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">분류</span>
+                      <p className="font-medium dark:text-white">{asset.category}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">상태</span>
+                      <p>
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          asset.status === '정상' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          asset.status === '수리중' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+                          'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                        }`}>
+                          {asset.status}
+                        </span>
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">제조사</span>
+                      <p className="font-medium dark:text-white">{asset.manufacturer || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">모델</span>
+                      <p className="font-medium dark:text-white">{asset.model || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">시리얼 번호</span>
+                      <p className="font-medium dark:text-white">{asset.serial_number || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">위치</span>
+                      <p className="font-medium dark:text-white">{asset.location || '-'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">담당자</span>
+                      <p className="font-medium dark:text-white">{asset.assigned_to || '-'}</p>
+                    </div>
                   </div>
                 </div>
+
+                {/* 구매 정보 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b dark:border-gray-700">
+                    💰 구매 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">구매가격</span>
+                      <p className="font-medium dark:text-white">{formatCurrency(asset.purchase_price)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">구매일</span>
+                      <p className="font-medium dark:text-white">{formatDate(asset.purchase_date)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">보증 종료일</span>
+                      <p className="font-medium dark:text-white">{formatDate(asset.warranty_end_date)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 점검 정보 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b dark:border-gray-700">
+                    🔧 점검 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">마지막 점검일</span>
+                      <p className="font-medium dark:text-white">{formatDate(asset.last_inspection_date)}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">다음 점검일</span>
+                      <p className="font-medium dark:text-white">{formatDate(asset.next_inspection_date)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 등록 정보 */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b dark:border-gray-700">
+                    📅 등록 정보
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">등록일</span>
+                      <p className="font-medium dark:text-white">
+                        {new Date(asset.created_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">최종 수정일</span>
+                      <p className="font-medium dark:text-white">
+                        {new Date(asset.updated_at).toLocaleDateString('ko-KR')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 메모 */}
                 {asset.notes && (
-                  <div className="mt-4 pt-4 border-t dark:border-gray-700">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">메모</span>
-                    <p className="mt-2 text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{asset.notes}</p>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 pb-2 border-b dark:border-gray-700">
+                      📝 메모
+                    </h3>
+                    <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{asset.notes}</p>
                   </div>
                 )}
               </div>
@@ -313,7 +383,7 @@ function AssetDetail() {
               </div>
             )}
 
-            {/* 첨부파일 탭 - 새로 추가! */}
+            {/* 첨부파일 탭 */}
             {activeTab === 'attachments' && (
               <div>
                 <FileAttachment entityType="asset" entityId={parseInt(id)} />

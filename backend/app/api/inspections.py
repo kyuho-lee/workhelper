@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from app.database import get_db
 from app.models.inspection import InspectionCampaign, InventoryInspection
@@ -83,8 +83,10 @@ def record_inspection(
     
     db.add(inspection)
     
-    # 자산의 마지막 점검일 업데이트
+    # 자산 정보 자동 업데이트
     asset.last_inspection_date = datetime.now().date()
+    # 다음 점검일 설정 (6개월 후)
+    asset.next_inspection_date = datetime.now().date() + timedelta(days=180)
     
     db.commit()
     db.refresh(inspection)
@@ -138,7 +140,7 @@ def get_inspection_stats(
         inspection_rate=round(inspection_rate, 1)
     )
 
-# 실사 기록 목록
+# 실사 기록 목록 (자산 정보 포함)
 @router.get("/", response_model=List[InventoryInspectionSchema])
 def get_inspections(
     campaign_id: int = None,
@@ -147,8 +149,10 @@ def get_inspections(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """실사 기록 목록"""
-    query = db.query(InventoryInspection)
+    """실사 기록 목록 (자산 정보 포함)"""
+    query = db.query(InventoryInspection).options(
+        joinedload(InventoryInspection.asset)  # 자산 정보 함께 로드
+    )
     
     if campaign_id:
         query = query.filter(InventoryInspection.campaign_id == campaign_id)
