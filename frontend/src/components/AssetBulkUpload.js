@@ -67,7 +67,7 @@ function AssetBulkUpload() {
     formData.append('file', file);
 
     try {
-      const response = await axios.post('${API_BASE_URL}/api/assets/bulk-upload', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/assets/bulk-upload`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

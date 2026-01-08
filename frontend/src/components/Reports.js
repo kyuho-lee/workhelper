@@ -70,7 +70,7 @@ function Reports() {
       if (startDate) params.start_date = startDate.toISOString();
       if (endDate) params.end_date = endDate.toISOString();
 
-      const response = await axios.get('${API_BASE_URL}/api/reports/combined-summary', {
+      const response = await axios.get(`${API_BASE_URL}/api/reports/combined-summary`, {
         headers: { Authorization: `Bearer ${token}` },
         params
       });

@@ -22,7 +22,7 @@ function Settings() {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('${API_BASE_URL}/api/categories');
+      const response = await axios.get(`${API_BASE_URL}/api/categories`);
       setCategories(response.data);
       setLoadingCategories(false);
     } catch (error) {
@@ -33,7 +33,7 @@ function Settings() {
 
   const fetchLocations = async () => {
     try {
-      const response = await axios.get('${API_BASE_URL}/api/locations');
+      const response = await axios.get(`${API_BASE_URL}/api/locations`);
       setLocations(response.data);
       setLoadingLocations(false);
     } catch (error) {
@@ -51,7 +51,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('${API_BASE_URL}/api/categories', newCategory, {
+      await axios.post(`${API_BASE_URL}/api/categories`, newCategory, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -73,7 +73,7 @@ function Settings() {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('${API_BASE_URL}/api/locations', newLocation, {
+      await axios.post(`${API_BASE_URL}/api/locations`, newLocation, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

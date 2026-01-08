@@ -47,7 +47,7 @@ function Profile() {
     }
 
     try {
-      await axios.put('${API_BASE_URL}/api/auth/change-password', {
+      await axios.put(`${API_BASE_URL}/api/auth/change-password`, {
         current_password: passwordData.current_password,
         new_password: passwordData.new_password
       });

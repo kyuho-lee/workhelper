@@ -39,7 +39,7 @@ function IssueEdit() {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('${API_BASE_URL}/api/users/simple-list', {
+      const response = await axios.get(`${API_BASE_URL}/api/users/simple-list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);

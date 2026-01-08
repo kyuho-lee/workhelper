@@ -32,7 +32,7 @@ function IssueList() {
 
   const fetchIssues = async () => {
     try {
-      const response = await axios.get('${API_BASE_URL}/api/issues');
+      const response = await axios.get(`${API_BASE_URL}/api/issues`);
       setIssues(response.data);
       setLoading(false);
     } catch (error) {
@@ -128,7 +128,7 @@ function IssueList() {
       try {
         const token = localStorage.getItem('token');
         
-        await axios.delete('${API_BASE_URL}/api/issues/bulk-delete', {
+        await axios.delete(`${API_BASE_URL}/api/issues/bulk-delete`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { issue_ids: selectedIssues }
         });

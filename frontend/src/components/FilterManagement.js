@@ -69,7 +69,7 @@ function FilterManagement({ isOpen, onClose, entityType = 'asset', onSave }) {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.post('${API_BASE_URL}/api/filter-configs', newFilter, {
+      await axios.post(`${API_BASE_URL}/api/filter-configs`, newFilter, {
         headers: { Authorization: `Bearer ${token}` }
       });
       

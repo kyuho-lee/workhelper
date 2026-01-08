@@ -38,7 +38,7 @@ function AssetList() {
 
   const fetchAssets = async () => {
     try {
-      const response = await axios.get('${API_BASE_URL}/api/assets');
+      const response = await axios.get(`${API_BASE_URL}/api/assets`);
       setAssets(response.data);
       setLoading(false);
     } catch (error) {
@@ -51,7 +51,7 @@ function AssetList() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        '${API_BASE_URL}/api/filter-configs?entity_type=asset&active_only=true',
+        `${API_BASE_URL}/api/filter-configs?entity_type=asset&active_only=true`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -171,7 +171,7 @@ function AssetList() {
       try {
         const token = localStorage.getItem('token');
         
-        await axios.delete('${API_BASE_URL}/api/assets/bulk-delete', {
+        await axios.delete(`${API_BASE_URL}/api/assets/bulk-delete`, {
           headers: { Authorization: `Bearer ${token}` },
           data: { asset_ids: selectedAssets }
         });

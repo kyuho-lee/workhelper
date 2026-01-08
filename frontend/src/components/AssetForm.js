@@ -33,8 +33,8 @@ function AssetForm() {
   const fetchCategoriesAndLocations = async () => {
     try {
       const [categoriesRes, locationsRes] = await Promise.all([
-        axios.get('${API_BASE_URL}/api/categories'),
-        axios.get('${API_BASE_URL}/api/locations')
+        axios.get(`${API_BASE_URL}/api/categories`),
+        axios.get(`${API_BASE_URL}/api/locations`)
       ]);
       
       setCategories(categoriesRes.data);
@@ -62,7 +62,7 @@ function AssetForm() {
     }
 
     try {
-      await axios.post('${API_BASE_URL}/api/assets', formData);
+      await axios.post(`${API_BASE_URL}/api/assets`, formData);
       alert('자산이 등록되었습니다.');
       navigate('/assets');
     } catch (error) {

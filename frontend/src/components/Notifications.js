@@ -19,7 +19,7 @@ function Notifications() {
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('${API_BASE_URL}/api/notifications/unread-count', {
+      const response = await axios.get(`${API_BASE_URL}/api/notifications/unread-count`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUnreadCount(response.data.count);
@@ -32,7 +32,7 @@ function Notifications() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get('${API_BASE_URL}/api/notifications?limit=10', {
+      const response = await axios.get(`${API_BASE_URL}/api/notifications?limit=10`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(response.data);
@@ -71,7 +71,7 @@ function Notifications() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        '${API_BASE_URL}/api/notifications/read-all',
+        `${API_BASE_URL}/api/notifications/read-all`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

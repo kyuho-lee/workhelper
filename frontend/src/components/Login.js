@@ -27,7 +27,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post('${API_BASE_URL}/api/auth/login', 
+      const response = await axios.post(`${API_BASE_URL}/api/auth/login`, 
         new URLSearchParams({
           username: formData.username,
           password: formData.password

@@ -33,8 +33,8 @@ function AssetEdit() {
       // 자산 정보, 카테고리, 위치를 동시에 가져오기
       const [assetRes, categoriesRes, locationsRes] = await Promise.all([
         axios.get(`${API_BASE_URL}/api/assets/${id}`),
-        axios.get('${API_BASE_URL}/api/categories'),
-        axios.get('${API_BASE_URL}/api/locations')
+        axios.get(`${API_BASE_URL}/api/categories`),
+        axios.get(`${API_BASE_URL}/api/locations`)
       ]);
       
       const asset = assetRes.data;
