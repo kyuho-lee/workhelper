@@ -24,9 +24,9 @@ wheels/
 *.egg
 
 # 환경 변수 (민감한 정보!)
-.env
+#.env
 .env.local
-.env.production
+#.env.production
 
 # 데이터베이스
 *.db
