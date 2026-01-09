@@ -8,7 +8,7 @@ function MobileQRScanner() {
   const { user } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [scannedAsset, setScannedAsset] = useState(null);
-  const [locations, setLocations] = useState([]); // 🔥 위치 목록 추가
+  const [locations, setLocations] = useState([]);
   const [stats, setStats] = useState({
     total_assets: 0,
     inspected_count: 0,
@@ -23,23 +23,38 @@ function MobileQRScanner() {
   });
   
   const html5QrCodeRef = useRef(null);
-  const isProcessingRef = useRef(false); // 🔥 중복 스캔 방지
+  const isProcessingRef = useRef(false);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     fetchStats();
-    fetchLocations(); // 🔥 위치 목록 가져오기
+    fetchLocations();
     startScanner();
     
     return () => {
+      isMountedRef.current = false;
       stopScanner();
     };
   }, []);
 
-  // 🔥 위치 목록 가져오기
+  // 🔥 scannedAsset이 변경될 때만 formData 초기화
+  useEffect(() => {
+    if (scannedAsset) {
+      setFormData({
+        status: '정상',
+        actual_location: scannedAsset.location || '',
+        condition_notes: ''
+      });
+    }
+  }, [scannedAsset]);
+
   const fetchLocations = async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/api/locations`);
-      setLocations(response.data);
+      if (isMountedRef.current) {
+        setLocations(response.data);
+      }
     } catch (error) {
       console.error('위치 목록 조회 실패:', error);
     }
@@ -53,6 +68,10 @@ function MobileQRScanner() {
         aspectRatio: 1.0
       };
 
+      if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+        return;
+      }
+
       html5QrCodeRef.current = new Html5Qrcode("qr-reader");
       
       await html5QrCodeRef.current.start(
@@ -62,19 +81,29 @@ function MobileQRScanner() {
         onScanError
       );
       
-      setScanning(true);
+      if (isMountedRef.current) {
+        setScanning(true);
+      }
     } catch (err) {
       console.error("카메라 시작 실패:", err);
-      setMessage('카메라 접근 권한을 허용해주세요.');
+      if (isMountedRef.current) {
+        setMessage('카메라 접근 권한을 허용해주세요.');
+      }
     }
   };
 
   const stopScanner = async () => {
-    if (html5QrCodeRef.current && scanning) {
+    if (html5QrCodeRef.current) {
       try {
-        await html5QrCodeRef.current.stop();
+        const scanner = html5QrCodeRef.current;
+        if (scanner.isScanning) {
+          await scanner.stop();
+        }
+        scanner.clear();
         html5QrCodeRef.current = null;
-        setScanning(false);
+        if (isMountedRef.current) {
+          setScanning(false);
+        }
       } catch (err) {
         console.error("스캐너 정지 오류:", err);
       }
@@ -82,42 +111,31 @@ function MobileQRScanner() {
   };
 
   const onScanSuccess = async (decodedText) => {
-    // 🔥 중복 스캔 방지
     if (isProcessingRef.current) {
       return;
     }
     isProcessingRef.current = true;
 
-    // 진동
     if (navigator.vibrate) {
       navigator.vibrate(100);
     }
 
-    // 음성 피드백
     const speech = new SpeechSynthesisUtterance('스캔 성공');
     speech.lang = 'ko-KR';
     speech.rate = 1.2;
     window.speechSynthesis.speak(speech);
 
-    // 스캐너 일시 중지
     await stopScanner();
 
-    // 🔥 "ASSET:" 접두사 제거
     const assetNumber = decodedText.replace(/^ASSET:/i, '');
     console.log('스캔된 텍스트:', decodedText);
     console.log('추출된 자산번호:', assetNumber);
 
-    // 자산 조회
     await fetchAsset(assetNumber);
-
-    // 🔥 2초 후 다시 스캔 가능하도록
-    setTimeout(() => {
-      isProcessingRef.current = false;
-    }, 2000);
   };
 
   const onScanError = (error) => {
-    // 무시 (계속 스캔)
+    // 무시
   };
 
   const fetchStats = async () => {
@@ -127,7 +145,9 @@ function MobileQRScanner() {
         `${API_BASE_URL}/api/inspections/stats`,
         { headers: { Authorization: `Bearer ${token}` }}
       );
-      setStats(response.data);
+      if (isMountedRef.current) {
+        setStats(response.data);
+      }
     } catch (error) {
       console.error('통계 조회 실패:', error);
     }
@@ -142,39 +162,45 @@ function MobileQRScanner() {
       );
 
       if (response.data.already_inspected) {
-        setMessage('⚠️ 이미 실사 완료된 자산입니다!');
+        if (isMountedRef.current) {
+          setMessage('⚠️ 이미 실사 완료된 자산입니다!');
+        }
         
         const speech = new SpeechSynthesisUtterance('이미 완료');
         speech.lang = 'ko-KR';
         window.speechSynthesis.speak(speech);
         
         setTimeout(() => {
-          setMessage('');
-          isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
-          startScanner();
+          if (isMountedRef.current) {
+            setMessage('');
+            isProcessingRef.current = false;
+            startScanner();
+          }
         }, 2000);
         return;
       }
 
-      setScannedAsset(response.data.asset);
-      setFormData({
-        status: '정상',
-        actual_location: response.data.asset.location || '',
-        condition_notes: ''
-      });
-      setMessage('');
+      if (isMountedRef.current) {
+        setScannedAsset(response.data.asset);
+        setMessage('');
+        isProcessingRef.current = false;
+      }
     } catch (error) {
       console.error('자산 조회 실패:', error);
-      setMessage('❌ 자산을 찾을 수 없습니다!');
+      if (isMountedRef.current) {
+        setMessage('❌ 자산을 찾을 수 없습니다!');
+      }
       
       const speech = new SpeechSynthesisUtterance('오류');
       speech.lang = 'ko-KR';
       window.speechSynthesis.speak(speech);
       
       setTimeout(() => {
-        setMessage('');
-        isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
-        startScanner();
+        if (isMountedRef.current) {
+          setMessage('');
+          isProcessingRef.current = false;
+          startScanner();
+        }
       }, 2000);
     }
   };
@@ -195,7 +221,9 @@ function MobileQRScanner() {
         { headers: { Authorization: `Bearer ${token}` }}
       );
 
-      setMessage('✅ 실사 완료!');
+      if (isMountedRef.current) {
+        setMessage('✅ 실사 완료!');
+      }
       
       const speech = new SpeechSynthesisUtterance('실사 완료');
       speech.lang = 'ko-KR';
@@ -206,27 +234,26 @@ function MobileQRScanner() {
       }
 
       setTimeout(() => {
-        // 🔥 완전히 초기화
-        setScannedAsset(null);
-        setFormData({
-          status: '정상',
-          actual_location: '',
-          condition_notes: ''
-        });
-        setMessage('');
-        fetchStats();
-        isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
-        startScanner();
+        if (isMountedRef.current) {
+          resetAndRestart();
+        }
       }, 1500);
 
     } catch (error) {
       console.error('실사 저장 실패:', error);
-      setMessage('❌ 저장 실패. 다시 시도해주세요.');
+      if (isMountedRef.current) {
+        setMessage('❌ 저장 실패. 다시 시도해주세요.');
+      }
     }
   };
 
   const handleCancel = () => {
-    // 🔥 완전히 초기화
+    console.log('취소 버튼 클릭');
+    resetAndRestart();
+  };
+
+  const resetAndRestart = () => {
+    console.log('초기화 및 재시작');
     setScannedAsset(null);
     setFormData({
       status: '정상',
@@ -234,11 +261,17 @@ function MobileQRScanner() {
       condition_notes: ''
     });
     setMessage('');
-    isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
-    startScanner();
+    isProcessingRef.current = false;
+    fetchStats();
+    
+    // 약간의 딜레이 후 스캐너 시작
+    setTimeout(() => {
+      if (isMountedRef.current) {
+        startScanner();
+      }
+    }, 300);
   };
 
-  // 🔥 상태 변경 핸들러
   const handleStatusChange = (newStatus) => {
     setFormData(prev => ({
       ...prev,
@@ -246,7 +279,6 @@ function MobileQRScanner() {
     }));
   };
 
-  // 🔥 위치 변경 핸들러
   const handleLocationChange = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -254,7 +286,6 @@ function MobileQRScanner() {
     }));
   };
 
-  // 🔥 메모 변경 핸들러
   const handleNotesChange = (e) => {
     setFormData(prev => ({
       ...prev,
@@ -264,7 +295,7 @@ function MobileQRScanner() {
 
   return (
     <div className="fixed inset-0 bg-gray-900 overflow-hidden">
-      {/* 상단 헤더 (반투명) */}
+      {/* 상단 헤더 */}
       <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/80 to-transparent p-4">
         <h1 className="text-white text-xl font-bold text-center mb-2">
           📱 재고 실사
@@ -290,24 +321,18 @@ function MobileQRScanner() {
         <div className="relative w-full h-full">
           <div id="qr-reader" className="w-full h-full"></div>
           
-          {/* 스캔 가이드 오버레이 */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="relative">
-              {/* 스캔 박스 */}
               <div className="w-64 h-64 border-4 border-white rounded-3xl shadow-2xl animate-pulse">
-                {/* 모서리 강조 */}
                 <div className="absolute top-0 left-0 w-12 h-12 border-t-8 border-l-8 border-blue-500 rounded-tl-3xl"></div>
                 <div className="absolute top-0 right-0 w-12 h-12 border-t-8 border-r-8 border-blue-500 rounded-tr-3xl"></div>
                 <div className="absolute bottom-0 left-0 w-12 h-12 border-b-8 border-l-8 border-blue-500 rounded-bl-3xl"></div>
                 <div className="absolute bottom-0 right-0 w-12 h-12 border-b-8 border-r-8 border-blue-500 rounded-br-3xl"></div>
               </div>
-              
-              {/* 스캔 라인 애니메이션 */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent animate-scan"></div>
             </div>
           </div>
 
-          {/* 하단 안내 */}
           <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent p-6 text-center">
             <p className="text-white text-lg font-medium mb-2">
               QR 코드를 스캔 영역에 맞춰주세요
@@ -317,7 +342,6 @@ function MobileQRScanner() {
             </p>
           </div>
 
-          {/* 메시지 오버레이 */}
           {message && (
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-30">
               <div className="bg-white rounded-2xl shadow-2xl p-6 text-center animate-bounce">
@@ -333,13 +357,11 @@ function MobileQRScanner() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-purple-900 to-pink-900 overflow-y-auto z-30">
           <div className="min-h-full flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden">
-              {/* 헤더 */}
               <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
                 <h2 className="text-2xl font-bold mb-2">🔍 자산 정보</h2>
                 <p className="text-blue-100 text-sm">실사 정보를 입력해주세요</p>
               </div>
 
-              {/* 자산 정보 카드 */}
               <div className="p-6 space-y-4">
                 <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
                   <div className="flex items-center">
@@ -374,7 +396,6 @@ function MobileQRScanner() {
                   </div>
                 </div>
 
-                {/* 실사 결과 입력 */}
                 <div className="space-y-4 pt-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-3">
@@ -398,7 +419,6 @@ function MobileQRScanner() {
                     </div>
                   </div>
 
-                  {/* 🔥 드롭다운으로 변경 */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       실제 위치
@@ -431,7 +451,6 @@ function MobileQRScanner() {
                   </div>
                 </div>
 
-                {/* 버튼 */}
                 <div className="flex gap-3 pt-4">
                   <button
                     type="button"
@@ -454,7 +473,6 @@ function MobileQRScanner() {
         </div>
       )}
 
-      {/* 애니메이션 CSS */}
       <style>{`
         @keyframes scan {
           0%, 100% { transform: translateY(0); }
