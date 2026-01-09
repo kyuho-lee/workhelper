@@ -31,7 +31,7 @@ class AssetUpdate(BaseModel):
     status: Optional[str] = None
     location: Optional[str] = None
     assigned_to: Optional[str] = None
-    purchase_date: Optional[datetime] = None
+    purchase_date: Optional[date] = None
     serial_number: Optional[str] = None
     purchase_price: Optional[Decimal] = None
     warranty_end_date: Optional[date] = None
