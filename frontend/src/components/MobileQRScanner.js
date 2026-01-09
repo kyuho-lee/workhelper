@@ -220,10 +220,7 @@ function MobileQRScanner() {
         { headers: { Authorization: `Bearer ${token}` }}
       );
 
-      if (isMountedRef.current) {
-        setMessage('✅ 실사 완료!');
-      }
-      
+      // 🔥 음성 피드백
       const speech = new SpeechSynthesisUtterance('실사 완료');
       speech.lang = 'ko-KR';
       window.speechSynthesis.speak(speech);
@@ -232,16 +229,22 @@ function MobileQRScanner() {
         navigator.vibrate([100, 50, 100]);
       }
 
-      setTimeout(() => {
-        if (isMountedRef.current) {
-          resetAndRestart();
-        }
-      }, 1500);
+      // 🔥 즉시 초기화 (메시지 없이)
+      if (isMountedRef.current) {
+        resetAndRestart();
+      }
 
     } catch (error) {
       console.error('실사 저장 실패:', error);
       if (isMountedRef.current) {
         setMessage('❌ 저장 실패. 다시 시도해주세요.');
+        
+        // 에러 메시지는 2초 후 제거
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            setMessage('');
+          }
+        }, 2000);
       }
     }
   };
