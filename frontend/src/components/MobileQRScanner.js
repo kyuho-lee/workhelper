@@ -84,10 +84,14 @@ function MobileQRScanner() {
     // 스캐너 일시 중지
     await stopScanner();
 
+    // 🔥 "ASSET:" 접두사 제거
+    const assetNumber = decodedText.replace(/^ASSET:/i, '');
+    console.log('스캔된 텍스트:', decodedText);
+    console.log('추출된 자산번호:', assetNumber);
+    
     // 자산 조회
-    fetchAsset(decodedText);
+    fetchAsset(assetNumber);
   };
-
   const onScanError = (error) => {
     // 무시 (계속 스캔)
   };
