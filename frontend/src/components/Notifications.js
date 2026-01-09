@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';  // AuthContext import 추가
 import API_BASE_URL from './config/api';
 
 function Notifications() {
@@ -8,13 +9,39 @@ function Notifications() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const { logout } = useAuth();  // logout 함수 가져오기
+  const navigate = useNavigate();
+  const intervalRef = useRef(null);  // interval을 저장할 ref
 
   useEffect(() => {
     fetchUnreadCount();
     // 30초마다 자동 갱신
-    const interval = setInterval(fetchUnreadCount, 30000);
-    return () => clearInterval(interval);
+    intervalRef.current = setInterval(fetchUnreadCount, 30000);
+    
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
   }, []);
+
+  // 401 에러 처리 함수
+  const handle401Error = () => {
+    // interval 중단
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    
+    // 로그아웃 처리
+    logout();
+    
+    // 로그인 페이지로 리다이렉트
+    navigate('/login', { 
+      state: { message: '세션이 만료되었습니다. 다시 로그인해주세요.' } 
+    });
+  };
 
   const fetchUnreadCount = async () => {
     try {
@@ -24,7 +51,12 @@ function Notifications() {
       });
       setUnreadCount(response.data.count);
     } catch (error) {
-      console.error('읽지 않은 알림 개수 조회 실패:', error);
+      // 401 에러면 자동 로그아웃
+      if (error.response && error.response.status === 401) {
+        handle401Error();
+      } else {
+        console.error('읽지 않은 알림 개수 조회 실패:', error);
+      }
     }
   };
 
@@ -38,8 +70,14 @@ function Notifications() {
       setNotifications(response.data);
       setLoading(false);
     } catch (error) {
-      console.error('알림 조회 실패:', error);
       setLoading(false);
+      
+      // 401 에러면 자동 로그아웃
+      if (error.response && error.response.status === 401) {
+        handle401Error();
+      } else {
+        console.error('알림 조회 실패:', error);
+      }
     }
   };
 
@@ -63,7 +101,12 @@ function Notifications() {
       fetchNotifications();
       fetchUnreadCount();
     } catch (error) {
-      console.error('알림 읽음 처리 실패:', error);
+      // 401 에러면 자동 로그아웃
+      if (error.response && error.response.status === 401) {
+        handle401Error();
+      } else {
+        console.error('알림 읽음 처리 실패:', error);
+      }
     }
   };
 
@@ -79,7 +122,12 @@ function Notifications() {
       fetchNotifications();
       fetchUnreadCount();
     } catch (error) {
-      console.error('전체 읽음 처리 실패:', error);
+      // 401 에러면 자동 로그아웃
+      if (error.response && error.response.status === 401) {
+        handle401Error();
+      } else {
+        console.error('전체 읽음 처리 실패:', error);
+      }
     }
   };
 

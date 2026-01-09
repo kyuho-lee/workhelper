@@ -1,18 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API_BASE_URL from './config/api';
 
 function Login() {
   const navigate = useNavigate();
+  const location = useLocation();  // 추가: location 가져오기
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: ''
   });
   const [error, setError] = useState('');
+  const [sessionMessage, setSessionMessage] = useState('');  // 추가: 세션 메시지
   const [loading, setLoading] = useState(false);
+
+  // 추가: 세션 만료 메시지 표시
+  useEffect(() => {
+    if (location.state?.message) {
+      setSessionMessage(location.state.message);
+      // 5초 후 메시지 자동 제거
+      const timer = setTimeout(() => {
+        setSessionMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,6 +38,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSessionMessage('');  // 추가: 로그인 시도 시 세션 메시지 제거
     setLoading(true);
 
     try {
@@ -101,6 +116,17 @@ function Login() {
               />
             </div>
 
+            {/* 추가: 세션 만료 메시지 (노란색) */}
+            {sessionMessage && (
+              <div className="bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200 px-4 py-3 rounded flex items-center gap-2">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                <span>{sessionMessage}</span>
+              </div>
+            )}
+
+            {/* 기존: 에러 메시지 (빨간색) */}
             {error && (
               <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded">
                 {error}
