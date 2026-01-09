@@ -72,17 +72,20 @@ def record_inspection(
     if not asset:
         raise HTTPException(status_code=404, detail="자산을 찾을 수 없습니다")
     
-    # 중복 체크 (오늘)
+    # 🔥 오늘 실사 기록 확인 (최신순)
     today = datetime.now().date()
     existing = db.query(InventoryInspection).filter(
         InventoryInspection.asset_id == asset.id,
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-    ).first()
+    ).order_by(InventoryInspection.inspection_date.desc()).first()
     
-    if existing:
-        raise HTTPException(status_code=400, detail="이미 실사 완료된 자산입니다")
+    # 🔥 재실사 허용 조건
+    # 1. 첫 실사: existing이 None
+    # 2. 재실사: existing이 있지만 상태가 "정상"이 아님
+    if existing and existing.status == '정상':
+        raise HTTPException(status_code=400, detail="이미 정상 실사 완료된 자산입니다")
     
-    # 실사 기록 생성
+    # 🔥 실사 기록 생성 (재실사도 새 레코드로 생성)
     inspection = InventoryInspection(
         campaign_id=scan_data.campaign_id,
         asset_id=asset.id,
@@ -91,25 +94,29 @@ def record_inspection(
         inspector_name=current_user.full_name or current_user.username,
         status=scan_data.status,
         actual_location=scan_data.actual_location or asset.location,
-        actual_status=scan_data.actual_location,
+        actual_status=scan_data.status,  # 🔥 수정
         condition_notes=scan_data.condition_notes
     )
     
     db.add(inspection)
     
-    # 자산 정보 자동 업데이트
+    # 🔥 자산 정보 업데이트
     asset.last_inspection_date = datetime.now().date()
-    # 다음 점검일 설정 (6개월 후)
     asset.next_inspection_date = datetime.now().date() + timedelta(days=180)
+    
+    # 🔥 실사 상태가 "정상"이면 자산 상태도 업데이트 (선택사항)
+    if scan_data.status == '정상':
+        asset.status = '정상'
     
     db.commit()
     db.refresh(inspection)
     
     return {
         "message": "실사 완료",
-        "inspection": inspection
+        "inspection": inspection,
+        "is_reinspection": existing is not None
     }
-
+    
 # 실사 통계
 @router.get("/stats", response_model=InspectionStats)
 def get_inspection_stats(
