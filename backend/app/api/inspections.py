@@ -27,21 +27,35 @@ def scan_asset(
     current_user: User = Depends(get_current_user)
 ):
     """QR 코드로 자산 조회"""
-    asset = db.query(Asset).filter(Asset.asset_number == asset_number).first()
+    # 🔥 "ASSET:" 접두사 제거
+    clean_asset_number = asset_number.replace("ASSET:", "")
+    
+    asset = db.query(Asset).filter(Asset.asset_number == clean_asset_number).first()
     
     if not asset:
         raise HTTPException(status_code=404, detail="자산을 찾을 수 없습니다")
     
-    # 이미 실사했는지 확인 (오늘)
+    # 🔥 오늘 실사 기록 확인 (최신순)
     today = datetime.now().date()
     existing = db.query(InventoryInspection).filter(
         InventoryInspection.asset_id == asset.id,
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-    ).first()
+    ).order_by(InventoryInspection.inspection_date.desc()).first()
+    
+    # 🔥 재실사 허용 조건: 최근 실사 상태가 "정상"이 아닌 경우
+    can_reinspect = False
+    last_status = None
+    
+    if existing:
+        last_status = existing.status
+        if existing.status != '정상':
+            can_reinspect = True
     
     return {
         "asset": asset,
-        "already_inspected": existing is not None,
+        "already_inspected": existing is not None and not can_reinspect,
+        "can_reinspect": can_reinspect,
+        "last_status": last_status,
         "inspection": existing
     }
 
