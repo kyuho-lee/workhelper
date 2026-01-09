@@ -87,6 +87,12 @@ function AssetForm() {
       navigate('/assets');
     } catch (error) {
       console.log('Error response:', error.response);
+      
+      // 🔥 이 줄 추가!
+      if (error.response?.data?.detail) {
+        console.log('상세 에러:', error.response.data.detail);
+      }
+      
       if (error.response && error.response.status === 400) {
         alert(error.response.data.detail);
       } else {
