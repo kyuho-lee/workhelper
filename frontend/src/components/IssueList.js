@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // 추가!
+import { useAuth } from '../context/AuthContext';
 import API_BASE_URL from './config/api';
 
 function IssueList() {
-  const { isAdmin } = useAuth(); // 추가!
+  const { isAdmin } = useAuth();
   
   const [issues, setIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
@@ -287,73 +287,85 @@ function IssueList() {
           </div>
         ) : (
           <>
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  {isAdmin && (
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectAll}
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 cursor-pointer"
-                      />
-                    </th>
-                  )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">제목</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">상태</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">우선순위</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">신고자</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">담당자</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">등록일</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">작업</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {currentItems.map((issue) => (
-                  <tr key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
                     {isAdmin && (
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <th className="px-6 py-3 text-left">
                         <input
                           type="checkbox"
-                          checked={selectedIssues.includes(issue.id)}
-                          onChange={() => handleSelectIssue(issue.id)}
+                          checked={selectAll}
+                          onChange={handleSelectAll}
                           className="w-4 h-4 cursor-pointer"
                         />
-                      </td>
+                      </th>
                     )}
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{issue.title}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(issue.status)}`}>
-                        {getStatusText(issue.status)}
-                      </span>
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityColor(issue.priority)}`}>
-                      {issue.priority}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{issue.reporter}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{issue.assignee || '-'}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                      {new Date(issue.created_at).toLocaleDateString('ko-KR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
-                      <Link 
-                        to={`/issues/edit/${issue.id}`}
-                        className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                      >
-                        수정
-                      </Link>
-                      <button 
-                        onClick={() => deleteIssue(issue.id)}
-                        className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                      >
-                        삭제
-                      </button>
-                    </td>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">자산번호</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">자산명</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">제목</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">상태</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">우선순위</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">신고자</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">담당자</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">등록일</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">작업</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {currentItems.map((issue) => (
+                    <tr key={issue.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      {isAdmin && (
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <input
+                            type="checkbox"
+                            checked={selectedIssues.includes(issue.id)}
+                            onChange={() => handleSelectIssue(issue.id)}
+                            className="w-4 h-4 cursor-pointer"
+                          />
+                        </td>
+                      )}
+                      {/* 🔥 자산번호 */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 dark:text-blue-400">
+                        {issue.asset?.asset_number || '-'}
+                      </td>
+                      {/* 🔥 자산명 */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {issue.asset?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">{issue.title}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(issue.status)}`}>
+                          {getStatusText(issue.status)}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm ${getPriorityColor(issue.priority)}`}>
+                        {issue.priority}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{issue.reporter}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">{issue.assignee || '-'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                        {new Date(issue.created_at).toLocaleDateString('ko-KR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <Link 
+                          to={`/issues/edit/${issue.id}`}
+                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                        >
+                          수정
+                        </Link>
+                        <button 
+                          onClick={() => deleteIssue(issue.id)}
+                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                        >
+                          삭제
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
             {totalPages > 1 && (
               <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
