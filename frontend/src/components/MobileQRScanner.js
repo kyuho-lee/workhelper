@@ -8,6 +8,7 @@ function MobileQRScanner() {
   const { user } = useAuth();
   const [scanning, setScanning] = useState(false);
   const [scannedAsset, setScannedAsset] = useState(null);
+  const [locations, setLocations] = useState([]); // 🔥 위치 목록 추가
   const [stats, setStats] = useState({
     total_assets: 0,
     inspected_count: 0,
@@ -21,17 +22,28 @@ function MobileQRScanner() {
     condition_notes: ''
   });
   
-  const scannerRef = useRef(null);
   const html5QrCodeRef = useRef(null);
+  const isProcessingRef = useRef(false); // 🔥 중복 스캔 방지
 
   useEffect(() => {
     fetchStats();
+    fetchLocations(); // 🔥 위치 목록 가져오기
     startScanner();
     
     return () => {
       stopScanner();
     };
   }, []);
+
+  // 🔥 위치 목록 가져오기
+  const fetchLocations = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/locations`);
+      setLocations(response.data);
+    } catch (error) {
+      console.error('위치 목록 조회 실패:', error);
+    }
+  };
 
   const startScanner = async () => {
     try {
@@ -70,6 +82,12 @@ function MobileQRScanner() {
   };
 
   const onScanSuccess = async (decodedText) => {
+    // 🔥 중복 스캔 방지
+    if (isProcessingRef.current) {
+      return;
+    }
+    isProcessingRef.current = true;
+
     // 진동
     if (navigator.vibrate) {
       navigator.vibrate(100);
@@ -88,10 +106,16 @@ function MobileQRScanner() {
     const assetNumber = decodedText.replace(/^ASSET:/i, '');
     console.log('스캔된 텍스트:', decodedText);
     console.log('추출된 자산번호:', assetNumber);
-    
+
     // 자산 조회
-    fetchAsset(assetNumber);
+    await fetchAsset(assetNumber);
+
+    // 🔥 2초 후 다시 스캔 가능하도록
+    setTimeout(() => {
+      isProcessingRef.current = false;
+    }, 2000);
   };
+
   const onScanError = (error) => {
     // 무시 (계속 스캔)
   };
@@ -126,6 +150,7 @@ function MobileQRScanner() {
         
         setTimeout(() => {
           setMessage('');
+          isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
           startScanner();
         }, 2000);
         return;
@@ -148,6 +173,7 @@ function MobileQRScanner() {
       
       setTimeout(() => {
         setMessage('');
+        isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
         startScanner();
       }, 2000);
     }
@@ -180,6 +206,7 @@ function MobileQRScanner() {
       }
 
       setTimeout(() => {
+        // 🔥 완전히 초기화
         setScannedAsset(null);
         setFormData({
           status: '정상',
@@ -188,6 +215,7 @@ function MobileQRScanner() {
         });
         setMessage('');
         fetchStats();
+        isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
         startScanner();
       }, 1500);
 
@@ -198,6 +226,7 @@ function MobileQRScanner() {
   };
 
   const handleCancel = () => {
+    // 🔥 완전히 초기화
     setScannedAsset(null);
     setFormData({
       status: '정상',
@@ -205,7 +234,32 @@ function MobileQRScanner() {
       condition_notes: ''
     });
     setMessage('');
+    isProcessingRef.current = false; // 🔥 다시 스캔 가능하도록
     startScanner();
+  };
+
+  // 🔥 상태 변경 핸들러
+  const handleStatusChange = (newStatus) => {
+    setFormData(prev => ({
+      ...prev,
+      status: newStatus
+    }));
+  };
+
+  // 🔥 위치 변경 핸들러
+  const handleLocationChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      actual_location: e.target.value
+    }));
+  };
+
+  // 🔥 메모 변경 핸들러
+  const handleNotesChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      condition_notes: e.target.value
+    }));
   };
 
   return (
@@ -302,11 +356,11 @@ function MobileQRScanner() {
                   </div>
                   <div className="flex items-center">
                     <span className="text-gray-500 w-24 text-sm">등록위치</span>
-                    <span className="text-gray-700">{scannedAsset.location}</span>
+                    <span className="text-gray-700">{scannedAsset.location || '-'}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="text-gray-500 w-24 text-sm">담당자</span>
-                    <span className="text-gray-700">{scannedAsset.assigned_to}</span>
+                    <span className="text-gray-700">{scannedAsset.assigned_to || '-'}</span>
                   </div>
                   <div className="flex items-center">
                     <span className="text-gray-500 w-24 text-sm">상태</span>
@@ -330,7 +384,8 @@ function MobileQRScanner() {
                       {['정상', '위치불일치', '상태이상', '분실'].map((status) => (
                         <button
                           key={status}
-                          onClick={() => setFormData({...formData, status})}
+                          type="button"
+                          onClick={() => handleStatusChange(status)}
                           className={`py-3 px-4 rounded-xl font-medium transition-all ${
                             formData.status === status
                               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg scale-105'
@@ -343,17 +398,23 @@ function MobileQRScanner() {
                     </div>
                   </div>
 
+                  {/* 🔥 드롭다운으로 변경 */}
                   <div>
                     <label className="block text-sm font-bold text-gray-700 mb-2">
                       실제 위치
                     </label>
-                    <input
-                      type="text"
+                    <select
                       value={formData.actual_location}
-                      onChange={(e) => setFormData({...formData, actual_location: e.target.value})}
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                      placeholder="실제 위치를 입력하세요"
-                    />
+                      onChange={handleLocationChange}
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all bg-white"
+                    >
+                      <option value="">위치 선택</option>
+                      {locations.map((loc) => (
+                        <option key={loc.id} value={loc.name}>
+                          {loc.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>
@@ -362,7 +423,7 @@ function MobileQRScanner() {
                     </label>
                     <textarea
                       value={formData.condition_notes}
-                      onChange={(e) => setFormData({...formData, condition_notes: e.target.value})}
+                      onChange={handleNotesChange}
                       rows="3"
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none"
                       placeholder="특이사항을 입력하세요 (선택)"
@@ -373,12 +434,14 @@ function MobileQRScanner() {
                 {/* 버튼 */}
                 <div className="flex gap-3 pt-4">
                   <button
+                    type="button"
                     onClick={handleCancel}
                     className="flex-1 py-4 bg-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-300 transition-all"
                   >
                     취소
                   </button>
                   <button
+                    type="button"
                     onClick={handleSubmit}
                     className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold rounded-xl hover:shadow-lg transition-all transform hover:scale-105"
                   >
@@ -406,4 +469,3 @@ function MobileQRScanner() {
 }
 
 export default MobileQRScanner;
-// 테스트용 
