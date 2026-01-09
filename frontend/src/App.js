@@ -25,6 +25,7 @@ import Notifications from './components/Notifications';
 import Reports from './components/Reports';
 import MobileQRScanner from './components/MobileQRScanner';
 import InspectionList from './components/InspectionList';
+import QRPrintPage from './components/QRPrintPage'; // 🔥 추가
 
 //import ActivityMonitor from './components/ActivityMonitor';
 
@@ -103,6 +104,12 @@ function AppContent() {
                   <Link to="/inspections" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                     📋 재고실사
                   </Link>
+                  {/* 🔥 QR 일괄 인쇄 메뉴 추가 */}
+                  {isAdmin && (
+                    <Link to="/qr-print" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                      🖨️ QR인쇄
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link to="/settings" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                       ⚙️ 설정
@@ -219,6 +226,16 @@ function AppContent() {
                   >
                     📋 재고실사
                   </Link>
+                  {/* 🔥 모바일 메뉴에도 QR 인쇄 추가 */}
+                  {isAdmin && (
+                    <Link 
+                      to="/qr-print" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      🖨️ QR 일괄 인쇄
+                    </Link>
+                  )}
                   {isAdmin && (
                     <Link 
                       to="/settings" 
@@ -285,6 +302,9 @@ function AppContent() {
             {/* 재고 실사 */}
             <Route path="/inspections" element={<InspectionList />} />
             <Route path="/mobile/scan" element={<MobileQRScanner />} />
+            
+            {/* 🔥 QR 일괄 인쇄 - 관리자만 */}
+            <Route path="/qr-print" element={isAdmin ? <QRPrintPage /> : <Navigate to="/" replace />} />
             
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
