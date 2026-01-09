@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import func
 from typing import List
 from datetime import datetime, timedelta
 
@@ -34,30 +35,19 @@ def scan_asset(
     if not asset:
         raise HTTPException(status_code=404, detail="자산을 찾을 수 없습니다")
     
-    # 🔥 오늘 실사 기록 확인 (최신순)
+    # 🔥 오늘 실사 기록 확인
     today = datetime.now().date()
     existing = db.query(InventoryInspection).filter(
         InventoryInspection.asset_id == asset.id,
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-    ).order_by(InventoryInspection.inspection_date.desc()).first()
+    ).first()
     
-    # 🔥 재실사 허용 조건 (개선!)
-    can_reinspect = False
-    last_status = None
-    
-    if existing:
-        last_status = existing.status
-        # 조건 1: 마지막 실사 상태가 "정상"이 아님
-        # 조건 2: 현재 자산 상태가 "정상"이 아님 (자산 상태가 변경된 경우)
-        if existing.status != '정상' or asset.status != '정상':
-            can_reinspect = True
+    # 🔥 단순화: 오늘 기록 있으면 무조건 완료
+    already_inspected = existing is not None
     
     return {
         "asset": asset,
-        "already_inspected": existing is not None and not can_reinspect,
-        "can_reinspect": can_reinspect,
-        "last_status": last_status,
-        "current_asset_status": asset.status,  # 🔥 현재 자산 상태 추가
+        "already_inspected": already_inspected,
         "inspection": existing
     }
 
@@ -74,20 +64,18 @@ def record_inspection(
     if not asset:
         raise HTTPException(status_code=404, detail="자산을 찾을 수 없습니다")
     
-    # 🔥 오늘 실사 기록 확인 (최신순)
+    # 🔥 오늘 실사 기록 확인
     today = datetime.now().date()
     existing = db.query(InventoryInspection).filter(
         InventoryInspection.asset_id == asset.id,
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-    ).order_by(InventoryInspection.inspection_date.desc()).first()
+    ).first()
     
-    # 🔥 재실사 허용 조건
-    # 1. 첫 실사: existing이 None
-    # 2. 재실사: existing이 있지만 상태가 "정상"이 아님
-    if existing and existing.status == '정상':
-        raise HTTPException(status_code=400, detail="이미 정상 실사 완료된 자산입니다")
+    # 🔥 이미 실사 완료된 경우 에러
+    if existing:
+        raise HTTPException(status_code=400, detail="이미 실사 완료된 자산입니다")
     
-    # 🔥 실사 기록 생성 (재실사도 새 레코드로 생성)
+    # 🔥 실사 기록 생성 (자산 상태는 건드리지 않음)
     inspection = InventoryInspection(
         campaign_id=scan_data.campaign_id,
         asset_id=asset.id,
@@ -96,27 +84,22 @@ def record_inspection(
         inspector_name=current_user.full_name or current_user.username,
         status=scan_data.status,
         actual_location=scan_data.actual_location or asset.location,
-        actual_status=scan_data.status,  # 🔥 수정
+        actual_status=scan_data.status,
         condition_notes=scan_data.condition_notes
     )
     
     db.add(inspection)
     
-    # 🔥 자산 정보 업데이트
+    # 🔥 자산의 마지막 실사일만 업데이트 (상태는 변경하지 않음!)
     asset.last_inspection_date = datetime.now().date()
     asset.next_inspection_date = datetime.now().date() + timedelta(days=180)
-    
-    # 🔥 실사 상태가 "정상"이면 자산 상태도 업데이트 (선택사항)
-    if scan_data.status == '정상':
-        asset.status = '정상'
     
     db.commit()
     db.refresh(inspection)
     
     return {
         "message": "실사 완료",
-        "inspection": inspection,
-        "is_reinspection": existing is not None
+        "inspection": inspection
     }
 
 # 실사 통계
@@ -130,9 +113,9 @@ def get_inspection_stats(
     # 전체 자산 수
     total_assets = db.query(Asset).count()
     
-    # 실사 완료 수 (오늘 또는 캠페인)
+    # 🔥 오늘 실사 완료된 고유 자산 수 (중복 제거)
     today = datetime.now().date()
-    query = db.query(InventoryInspection)
+    query = db.query(func.count(func.distinct(InventoryInspection.asset_id)))
     
     if campaign_id:
         query = query.filter(InventoryInspection.campaign_id == campaign_id)
@@ -141,14 +124,36 @@ def get_inspection_stats(
             InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
         )
     
-    inspected_count = query.count()
+    inspected_count = query.scalar() or 0
     pending_count = total_assets - inspected_count
     
-    # 상태별 집계
-    normal_count = query.filter(InventoryInspection.status == '정상').count()
-    location_mismatch_count = query.filter(InventoryInspection.status == '위치불일치').count()
-    status_abnormal_count = query.filter(InventoryInspection.status == '상태이상').count()
-    missing_count = query.filter(InventoryInspection.status == '분실').count()
+    # 🔥 상태별 집계 (오늘 기록 중 각 자산의 최신 기록만)
+    # 서브쿼리: 각 자산의 최신 실사 ID
+    subquery = db.query(
+        InventoryInspection.asset_id,
+        func.max(InventoryInspection.id).label('latest_id')
+    )
+    
+    if campaign_id:
+        subquery = subquery.filter(InventoryInspection.campaign_id == campaign_id)
+    else:
+        subquery = subquery.filter(
+            InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
+        )
+    
+    subquery = subquery.group_by(InventoryInspection.asset_id).subquery()
+    
+    # 최신 기록만 가져오기
+    latest_inspections = db.query(InventoryInspection).join(
+        subquery,
+        InventoryInspection.id == subquery.c.latest_id
+    ).all()
+    
+    # 상태별 카운트
+    normal_count = sum(1 for i in latest_inspections if i.status == '정상')
+    location_mismatch_count = sum(1 for i in latest_inspections if i.status == '위치불일치')
+    status_abnormal_count = sum(1 for i in latest_inspections if i.status == '상태이상')
+    missing_count = sum(1 for i in latest_inspections if i.status == '분실')
     
     inspection_rate = (inspected_count / total_assets * 100) if total_assets > 0 else 0
     

@@ -128,9 +128,6 @@ function MobileQRScanner() {
     await stopScanner();
 
     const assetNumber = decodedText.replace(/^ASSET:/i, '');
-    console.log('스캔된 텍스트:', decodedText);
-    console.log('추출된 자산번호:', assetNumber);
-
     await fetchAsset(assetNumber);
   };
 
@@ -161,48 +158,11 @@ function MobileQRScanner() {
         { headers: { Authorization: `Bearer ${token}` }}
       );
 
-      // 🔥 재실사 가능한 경우
-      if (response.data.can_reinspect) {
-        if (isMountedRef.current) {
-          setScannedAsset(response.data.asset);
-          
-          let statusMsg = '';
-          
-          // 재실사 이유에 따른 메시지
-          if (response.data.reinspect_reason === 'asset_status_changed') {
-            statusMsg = `🔄 재실사: 자산 상태가 변경되었습니다 (현재: ${response.data.current_asset_status})`;
-          } else {
-            switch(response.data.last_status) {
-              case '위치불일치':
-                statusMsg = '📍 재실사: 위치 문제 해결 시 상태를 업데이트하세요';
-                break;
-              case '상태이상':
-                statusMsg = '🔧 재실사: 상태 문제 해결 시 상태를 업데이트하세요';
-                break;
-              case '분실':
-                statusMsg = '🔍 재실사: 자산 발견 시 상태를 업데이트하세요';
-                break;
-              default:
-                statusMsg = '⚠️ 재실사: 문제 해결 시 상태를 업데이트하세요';
-            }
-          }
-          
-          setMessage(statusMsg);
-          isProcessingRef.current = false;
-          
-          setTimeout(() => {
-            if (isMountedRef.current) {
-              setMessage('');
-            }
-          }, 3000);
-        }
-        return;
-      }
-
-      // 🔥 이미 정상 실사 완료된 경우
+      // 🔥 단순화: 이미 실사 완료 or 실사 가능
       if (response.data.already_inspected) {
+        // 이미 완료
         if (isMountedRef.current) {
-          setMessage('✅ 이미 정상 실사 완료된 자산입니다!');
+          setMessage('✅ 이미 실사 완료된 자산입니다!');
         }
         
         const speech = new SpeechSynthesisUtterance('이미 완료');
@@ -216,14 +176,13 @@ function MobileQRScanner() {
             startScanner();
           }
         }, 2000);
-        return;
-      }
-
-      // 🔥 첫 실사인 경우
-      if (isMountedRef.current) {
-        setScannedAsset(response.data.asset);
-        setMessage('');
-        isProcessingRef.current = false;
+      } else {
+        // 실사 가능
+        if (isMountedRef.current) {
+          setScannedAsset(response.data.asset);
+          setMessage('');
+          isProcessingRef.current = false;
+        }
       }
     } catch (error) {
       console.error('자산 조회 실패:', error);
@@ -288,12 +247,10 @@ function MobileQRScanner() {
   };
 
   const handleCancel = () => {
-    console.log('취소 버튼 클릭');
     resetAndRestart();
   };
 
   const resetAndRestart = () => {
-    console.log('초기화 및 재시작');
     setScannedAsset(null);
     setFormData({
       status: '정상',
@@ -304,7 +261,6 @@ function MobileQRScanner() {
     isProcessingRef.current = false;
     fetchStats();
     
-    // 약간의 딜레이 후 스캐너 시작
     setTimeout(() => {
       if (isMountedRef.current) {
         startScanner();
@@ -425,7 +381,7 @@ function MobileQRScanner() {
                     <span className="text-gray-700">{scannedAsset.assigned_to || '-'}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-gray-500 w-24 text-sm">상태</span>
+                    <span className="text-gray-500 w-24 text-sm">현재상태</span>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                       scannedAsset.status === '정상' ? 'bg-green-100 text-green-800' :
                       scannedAsset.status === '수리중' ? 'bg-yellow-100 text-yellow-800' :
