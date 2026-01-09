@@ -27,7 +27,6 @@ def scan_asset(
     current_user: User = Depends(get_current_user)
 ):
     """QR 코드로 자산 조회"""
-    # 🔥 "ASSET:" 접두사 제거
     clean_asset_number = asset_number.replace("ASSET:", "")
     
     asset = db.query(Asset).filter(Asset.asset_number == clean_asset_number).first()
@@ -42,13 +41,15 @@ def scan_asset(
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
     ).order_by(InventoryInspection.inspection_date.desc()).first()
     
-    # 🔥 재실사 허용 조건: 최근 실사 상태가 "정상"이 아닌 경우
+    # 🔥 재실사 허용 조건 (개선!)
     can_reinspect = False
     last_status = None
     
     if existing:
         last_status = existing.status
-        if existing.status != '정상':
+        # 조건 1: 마지막 실사 상태가 "정상"이 아님
+        # 조건 2: 현재 자산 상태가 "정상"이 아님 (자산 상태가 변경된 경우)
+        if existing.status != '정상' or asset.status != '정상':
             can_reinspect = True
     
     return {
@@ -56,6 +57,7 @@ def scan_asset(
         "already_inspected": existing is not None and not can_reinspect,
         "can_reinspect": can_reinspect,
         "last_status": last_status,
+        "current_asset_status": asset.status,  # 🔥 현재 자산 상태 추가
         "inspection": existing
     }
 
@@ -116,7 +118,7 @@ def record_inspection(
         "inspection": inspection,
         "is_reinspection": existing is not None
     }
-    
+
 # 실사 통계
 @router.get("/stats", response_model=InspectionStats)
 def get_inspection_stats(

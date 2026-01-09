@@ -123,6 +123,7 @@ function InspectionList() {
         '구매가격': inspection.asset?.purchase_price || '',
         '점검자': inspection.inspector_name,
         '실사상태': inspection.status,
+        '현재자산상태': inspection.asset?.status || '',
         '실제위치': inspection.actual_location || '',
         '등록위치': inspection.asset?.location || '',
         '메모': inspection.condition_notes || ''
@@ -142,6 +143,8 @@ function InspectionList() {
   const getStatusColor = (status) => {
     const colors = {
       '정상': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+      '수리중': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      '폐기': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200',
       '위치불일치': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
       '상태이상': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
       '분실': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
@@ -293,7 +296,7 @@ function InspectionList() {
                       점검자
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
-                      실사상태
+                      상태
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">
                       실제위치
@@ -321,10 +324,21 @@ function InspectionList() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {inspection.inspector_name}
                       </td>
+                      {/* 🔥 수정된 부분: 실사 상태 + 현재 자산 상태 */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(inspection.status)}`}>
-                          {inspection.status}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          {/* 실사 당시 상태 */}
+                          <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(inspection.status)}`}>
+                            실사: {inspection.status}
+                          </span>
+                          
+                          {/* 현재 자산 상태 (다르면 표시) */}
+                          {inspection.asset?.status && inspection.asset.status !== inspection.status && (
+                            <span className={`px-2 py-1 text-xs rounded-full border-2 ${getStatusColor(inspection.asset.status)}`}>
+                              현재: {inspection.asset.status}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {inspection.actual_location || '-'}

@@ -166,26 +166,30 @@ function MobileQRScanner() {
         if (isMountedRef.current) {
           setScannedAsset(response.data.asset);
           
-          // 상태별 메시지
           let statusMsg = '';
-          switch(response.data.last_status) {
-            case '위치불일치':
-              statusMsg = '📍 재실사: 위치 문제 해결 시 상태를 업데이트하세요';
-              break;
-            case '상태이상':
-              statusMsg = '🔧 재실사: 상태 문제 해결 시 상태를 업데이트하세요';
-              break;
-            case '분실':
-              statusMsg = '🔍 재실사: 자산 발견 시 상태를 업데이트하세요';
-              break;
-            default:
-              statusMsg = '⚠️ 재실사: 문제 해결 시 상태를 업데이트하세요';
+          
+          // 재실사 이유에 따른 메시지
+          if (response.data.reinspect_reason === 'asset_status_changed') {
+            statusMsg = `🔄 재실사: 자산 상태가 변경되었습니다 (현재: ${response.data.current_asset_status})`;
+          } else {
+            switch(response.data.last_status) {
+              case '위치불일치':
+                statusMsg = '📍 재실사: 위치 문제 해결 시 상태를 업데이트하세요';
+                break;
+              case '상태이상':
+                statusMsg = '🔧 재실사: 상태 문제 해결 시 상태를 업데이트하세요';
+                break;
+              case '분실':
+                statusMsg = '🔍 재실사: 자산 발견 시 상태를 업데이트하세요';
+                break;
+              default:
+                statusMsg = '⚠️ 재실사: 문제 해결 시 상태를 업데이트하세요';
+            }
           }
           
           setMessage(statusMsg);
           isProcessingRef.current = false;
           
-          // 메시지는 3초 후 사라짐
           setTimeout(() => {
             if (isMountedRef.current) {
               setMessage('');
@@ -240,7 +244,7 @@ function MobileQRScanner() {
       }, 2000);
     }
   };
-  
+
   const handleSubmit = async () => {
     if (!scannedAsset) return;
 
