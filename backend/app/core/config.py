@@ -11,7 +11,7 @@ class Settings:
     # 데이터베이스
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL",
-        "mysql+pymysql://root:1234@localhost:3306/workhelper"
+        "mysql+pymysql://root:NewPassword123!@localhost:3306/workhelper"
     )
     
     # JWT

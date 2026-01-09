@@ -42,13 +42,22 @@ def scan_asset(
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
     ).first()
     
-    # 🔥 단순화: 오늘 기록 있으면 무조건 완료
-    already_inspected = existing is not None
+    # 🔥 실사 가능 여부 판단
+    already_inspected = False
+    
+    if existing:
+        # 오늘 이미 실사했음
+        # 하지만 다음 실사일이 지났으면 실사 가능!
+        if asset.next_inspection_date and today >= asset.next_inspection_date:
+            already_inspected = False  # 다음 실사일 지남 → 실사 가능
+        else:
+            already_inspected = True  # 아직 다음 실사일 안 됨 → 실사 불가
     
     return {
         "asset": asset,
         "already_inspected": already_inspected,
-        "inspection": existing
+        "inspection": existing,
+        "next_inspection_date": asset.next_inspection_date  # 프론트엔드 참고용
     }
 
 # QR 스캔 - 실사 기록
@@ -71,8 +80,17 @@ def record_inspection(
         InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
     ).first()
     
-    # 🔥 이미 실사 완료된 경우 에러
+    # 🔥 실사 가능 여부 판단
+    can_inspect = True
+    
     if existing:
+        # 오늘 이미 실사했지만, 다음 실사일이 지났으면 가능
+        if asset.next_inspection_date and today >= asset.next_inspection_date:
+            can_inspect = True
+        else:
+            can_inspect = False
+    
+    if not can_inspect:
         raise HTTPException(status_code=400, detail="이미 실사 완료된 자산입니다")
     
     # 🔥 실사 기록 생성 (자산 상태는 건드리지 않음)
@@ -90,9 +108,9 @@ def record_inspection(
     
     db.add(inspection)
     
-    # 🔥 자산의 마지막 실사일만 업데이트 (상태는 변경하지 않음!)
+    # 🔥 자산의 마지막 실사일 + 다음 실사일 업데이트
     asset.last_inspection_date = datetime.now().date()
-    asset.next_inspection_date = datetime.now().date() + timedelta(days=180)
+    asset.next_inspection_date = datetime.now().date() + timedelta(days=180)  # 6개월 후
     
     db.commit()
     db.refresh(inspection)
@@ -109,51 +127,48 @@ def get_inspection_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """실사 통계 조회"""
-    # 전체 자산 수
-    total_assets = db.query(Asset).count()
-    
-    # 🔥 오늘 실사 완료된 고유 자산 수 (중복 제거)
+    """실사 통계 조회 (다음 점검일 기준)"""
     today = datetime.now().date()
-    query = db.query(func.count(func.distinct(InventoryInspection.asset_id)))
     
-    if campaign_id:
-        query = query.filter(InventoryInspection.campaign_id == campaign_id)
-    else:
-        query = query.filter(
-            InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-        )
+    # 🔥 전체 자산 가져오기
+    all_assets = db.query(Asset).all()
+    total_assets = len(all_assets)
     
-    inspected_count = query.scalar() or 0
-    pending_count = total_assets - inspected_count
+    # 🔥 실사 완료 = 다음 점검일이 오늘 이후 (실사 주기 내)
+    inspected_assets = [
+        asset for asset in all_assets 
+        if asset.next_inspection_date and asset.next_inspection_date > today
+    ]
+    inspected_count = len(inspected_assets)
     
-    # 🔥 상태별 집계 (오늘 기록 중 각 자산의 최신 기록만)
-    # 서브쿼리: 각 자산의 최신 실사 ID
-    subquery = db.query(
-        InventoryInspection.asset_id,
-        func.max(InventoryInspection.id).label('latest_id')
-    )
+    # 🔥 실사 필요 = 다음 점검일이 오늘 이전 또는 null (점검 필요)
+    pending_assets = [
+        asset for asset in all_assets
+        if not asset.next_inspection_date or asset.next_inspection_date <= today
+    ]
+    pending_count = len(pending_assets)
     
-    if campaign_id:
-        subquery = subquery.filter(InventoryInspection.campaign_id == campaign_id)
-    else:
-        subquery = subquery.filter(
-            InventoryInspection.inspection_date >= datetime.combine(today, datetime.min.time())
-        )
+    # 🔥 상태별 집계 (실사 완료된 자산들의 최근 실사 기록 기준)
+    normal_count = 0
+    location_mismatch_count = 0
+    status_abnormal_count = 0
+    missing_count = 0
     
-    subquery = subquery.group_by(InventoryInspection.asset_id).subquery()
-    
-    # 최신 기록만 가져오기
-    latest_inspections = db.query(InventoryInspection).join(
-        subquery,
-        InventoryInspection.id == subquery.c.latest_id
-    ).all()
-    
-    # 상태별 카운트
-    normal_count = sum(1 for i in latest_inspections if i.status == '정상')
-    location_mismatch_count = sum(1 for i in latest_inspections if i.status == '위치불일치')
-    status_abnormal_count = sum(1 for i in latest_inspections if i.status == '상태이상')
-    missing_count = sum(1 for i in latest_inspections if i.status == '분실')
+    for asset in inspected_assets:
+        # 각 자산의 가장 최근 실사 기록 조회
+        latest_inspection = db.query(InventoryInspection).filter(
+            InventoryInspection.asset_id == asset.id
+        ).order_by(InventoryInspection.inspection_date.desc()).first()
+        
+        if latest_inspection:
+            if latest_inspection.status == '정상':
+                normal_count += 1
+            elif latest_inspection.status == '위치불일치':
+                location_mismatch_count += 1
+            elif latest_inspection.status == '상태이상':
+                status_abnormal_count += 1
+            elif latest_inspection.status == '분실':
+                missing_count += 1
     
     inspection_rate = (inspected_count / total_assets * 100) if total_assets > 0 else 0
     
