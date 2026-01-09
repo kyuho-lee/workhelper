@@ -98,7 +98,32 @@ def change_password(
     
     return {"message": "비밀번호가 변경되었습니다."}
 
+
 @router.post("/logout")
 def logout():
     # JWT는 서버에서 무효화할 수 없으므로 클라이언트에서 토큰 삭제
     return {"message": "로그아웃되었습니다."}
+
+@router.post("/refresh")  # 👈 들여쓰기 제거!
+def refresh_token(current_user: User = Depends(get_current_user)):
+    """토큰 갱신 - 활동 시 자동 호출"""
+    from datetime import timedelta
+    from app.core.security import create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+    
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": current_user.username},
+        expires_delta=access_token_expires
+    )
+    
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": current_user.id,
+            "username": current_user.username,
+            "email": current_user.email,
+            "full_name": current_user.full_name,
+            "role": current_user.role
+        }
+    }

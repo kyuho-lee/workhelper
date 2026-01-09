@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Components
@@ -25,6 +25,8 @@ import Notifications from './components/Notifications';
 import Reports from './components/Reports';
 import MobileQRScanner from './components/MobileQRScanner';
 import InspectionList from './components/InspectionList';
+
+//import ActivityMonitor from './components/ActivityMonitor';
 
 function AppContent() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -300,11 +302,11 @@ function AppContent() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <AuthProvider>
         <AppContent />
       </AuthProvider>
-    </BrowserRouter>
+    </Router>
   );
 }
 
