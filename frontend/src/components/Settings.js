@@ -118,7 +118,7 @@ function Settings() {
 
   if (!isAdmin) {
     return (
-      <div className="text-center py-10">
+      <div className="text-center py-10 px-4">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-4">접근 권한 없음</h2>
         <p className="text-gray-600 dark:text-gray-400">관리자만 설정 페이지에 접근할 수 있습니다.</p>
       </div>
@@ -126,13 +126,52 @@ function Settings() {
   }
 
   return (
-    <div>
+    <div className="px-4 sm:px-0">
       <h2 className="text-2xl font-semibold text-gray-800 dark:text-white mb-6">⚙️ 설정</h2>
-      <div className="flex gap-4 mb-6 border-b border-gray-200 dark:border-gray-700">
-        <button onClick={() => setActiveTab('categories')} className={`pb-3 px-4 font-medium ${activeTab === 'categories' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>📦 카테고리</button>
-        <button onClick={() => setActiveTab('locations')} className={`pb-3 px-4 font-medium ${activeTab === 'locations' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-600'}`}>📍 위치</button>
+      
+      {/* 탭 메뉴 - 모바일 최적화 */}
+      <div className="flex gap-2 sm:gap-4 mb-6 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+        <button 
+          onClick={() => setActiveTab('categories')} 
+          className={`pb-3 px-3 sm:px-4 font-medium whitespace-nowrap ${
+            activeTab === 'categories' 
+              ? 'border-b-2 border-blue-500 text-blue-600' 
+              : 'text-gray-600 dark:text-gray-400'
+          }`}
+        >
+          📦 카테고리
+        </button>
+        <button 
+          onClick={() => setActiveTab('locations')} 
+          className={`pb-3 px-3 sm:px-4 font-medium whitespace-nowrap ${
+            activeTab === 'locations' 
+              ? 'border-b-2 border-blue-500 text-blue-600' 
+              : 'text-gray-600 dark:text-gray-400'
+          }`}
+        >
+          📍 위치
+        </button>
       </div>
-      {activeTab === 'categories' ? <CategoryTab categories={categories} loading={loadingCategories} newCategory={newCategory} setNewCategory={setNewCategory} onAdd={handleAddCategory} onDelete={handleDeleteCategory} /> : <LocationTab locations={locations} loading={loadingLocations} newLocation={newLocation} setNewLocation={setNewLocation} onAdd={handleAddLocation} onDelete={handleDeleteLocation} />}
+
+      {activeTab === 'categories' ? (
+        <CategoryTab 
+          categories={categories} 
+          loading={loadingCategories} 
+          newCategory={newCategory} 
+          setNewCategory={setNewCategory} 
+          onAdd={handleAddCategory} 
+          onDelete={handleDeleteCategory} 
+        />
+      ) : (
+        <LocationTab 
+          locations={locations} 
+          loading={loadingLocations} 
+          newLocation={newLocation} 
+          setNewLocation={setNewLocation} 
+          onAdd={handleAddLocation} 
+          onDelete={handleDeleteLocation} 
+        />
+      )}
     </div>
   );
 }
@@ -140,17 +179,103 @@ function Settings() {
 function CategoryTab({ categories, loading, newCategory, setNewCategory, onAdd, onDelete }) {
   return (
     <div>
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+      {/* 추가 폼 - 모바일 최적화 */}
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow mb-6">
         <h3 className="text-lg font-semibold mb-4 dark:text-white">새 카테고리 추가</h3>
-        <form onSubmit={onAdd} className="flex gap-4">
-          <input type="text" placeholder="카테고리 이름 *" value={newCategory.name} onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })} className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white" required />
-          <input type="text" placeholder="설명" value={newCategory.description} onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })} className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white" />
-          <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded">+ 추가</button>
+        <form onSubmit={onAdd} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <input 
+            type="text" 
+            placeholder="카테고리 이름 *" 
+            value={newCategory.name} 
+            onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })} 
+            className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600" 
+            required 
+          />
+          <input 
+            type="text" 
+            placeholder="설명" 
+            value={newCategory.description} 
+            onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })} 
+            className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600" 
+          />
+          <button 
+            type="submit" 
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition-colors"
+          >
+            + 추가
+          </button>
         </form>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="px-6 py-4 border-b"><h3 className="font-semibold dark:text-white">카테고리 목록 ({categories.length}개)</h3></div>
-        {loading ? <div className="py-10 text-center">로딩중...</div> : <table className="min-w-full"><thead className="bg-gray-50 dark:bg-gray-700"><tr><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">이름</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">설명</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">등록일</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">작업</th></tr></thead><tbody className="divide-y dark:divide-gray-700">{categories.map(cat => <tr key={cat.id}><td className="px-6 py-4 dark:text-white">{cat.name}</td><td className="px-6 py-4 dark:text-gray-300">{cat.description || '-'}</td><td className="px-6 py-4 dark:text-gray-300">{new Date(cat.created_at).toLocaleDateString('ko-KR')}</td><td className="px-6 py-4"><button onClick={() => onDelete(cat.id, cat.name)} className="text-red-600">삭제</button></td></tr>)}</tbody></table>}
+
+      {/* 목록 - 모바일 최적화 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold dark:text-white">카테고리 목록 ({categories.length}개)</h3>
+        </div>
+        
+        {loading ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">로딩중...</div>
+        ) : categories.length === 0 ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">등록된 카테고리가 없습니다.</div>
+        ) : (
+          <>
+            {/* 데스크톱: 테이블 */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">이름</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">설명</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">등록일</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">작업</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {categories.map(cat => (
+                    <tr key={cat.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 dark:text-white font-medium">{cat.name}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{cat.description || '-'}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                        {new Date(cat.created_at).toLocaleDateString('ko-KR')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={() => onDelete(cat.id, cat.name)} 
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                        >
+                          삭제
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 모바일: 카드 */}
+            <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+              {categories.map(cat => (
+                <div key={cat.id} className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{cat.name}</h4>
+                    <button 
+                      onClick={() => onDelete(cat.id, cat.name)} 
+                      className="text-red-600 dark:text-red-400 text-sm font-medium ml-2"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    {cat.description || '설명 없음'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    등록일: {new Date(cat.created_at).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -159,17 +284,103 @@ function CategoryTab({ categories, loading, newCategory, setNewCategory, onAdd, 
 function LocationTab({ locations, loading, newLocation, setNewLocation, onAdd, onDelete }) {
   return (
     <div>
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-6">
+      {/* 추가 폼 - 모바일 최적화 */}
+      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow mb-6">
         <h3 className="text-lg font-semibold mb-4 dark:text-white">새 위치 추가</h3>
-        <form onSubmit={onAdd} className="flex gap-4">
-          <input type="text" placeholder="위치 이름 *" value={newLocation.name} onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })} className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white" required />
-          <input type="text" placeholder="설명" value={newLocation.description} onChange={(e) => setNewLocation({ ...newLocation, description: e.target.value })} className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white" />
-          <button type="submit" className="bg-blue-500 text-white px-6 py-2 rounded">+ 추가</button>
+        <form onSubmit={onAdd} className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <input 
+            type="text" 
+            placeholder="위치 이름 *" 
+            value={newLocation.name} 
+            onChange={(e) => setNewLocation({ ...newLocation, name: e.target.value })} 
+            className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600" 
+            required 
+          />
+          <input 
+            type="text" 
+            placeholder="설명" 
+            value={newLocation.description} 
+            onChange={(e) => setNewLocation({ ...newLocation, description: e.target.value })} 
+            className="flex-1 border rounded px-4 py-2 dark:bg-gray-700 dark:text-white dark:border-gray-600" 
+          />
+          <button 
+            type="submit" 
+            className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded font-medium transition-colors"
+          >
+            + 추가
+          </button>
         </form>
       </div>
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-        <div className="px-6 py-4 border-b"><h3 className="font-semibold dark:text-white">위치 목록 ({locations.length}개)</h3></div>
-        {loading ? <div className="py-10 text-center">로딩중...</div> : <table className="min-w-full"><thead className="bg-gray-50 dark:bg-gray-700"><tr><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">이름</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">설명</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">등록일</th><th className="px-6 py-3 text-left text-xs uppercase dark:text-gray-300">작업</th></tr></thead><tbody className="divide-y dark:divide-gray-700">{locations.map(loc => <tr key={loc.id}><td className="px-6 py-4 dark:text-white">{loc.name}</td><td className="px-6 py-4 dark:text-gray-300">{loc.description || '-'}</td><td className="px-6 py-4 dark:text-gray-300">{new Date(loc.created_at).toLocaleDateString('ko-KR')}</td><td className="px-6 py-4"><button onClick={() => onDelete(loc.id, loc.name)} className="text-red-600">삭제</button></td></tr>)}</tbody></table>}
+
+      {/* 목록 - 모바일 최적화 */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h3 className="font-semibold dark:text-white">위치 목록 ({locations.length}개)</h3>
+        </div>
+        
+        {loading ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">로딩중...</div>
+        ) : locations.length === 0 ? (
+          <div className="py-10 text-center text-gray-500 dark:text-gray-400">등록된 위치가 없습니다.</div>
+        ) : (
+          <>
+            {/* 데스크톱: 테이블 */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">이름</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">설명</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">등록일</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300">작업</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {locations.map(loc => (
+                    <tr key={loc.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="px-6 py-4 dark:text-white font-medium">{loc.name}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300">{loc.description || '-'}</td>
+                      <td className="px-6 py-4 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                        {new Date(loc.created_at).toLocaleDateString('ko-KR')}
+                      </td>
+                      <td className="px-6 py-4">
+                        <button 
+                          onClick={() => onDelete(loc.id, loc.name)} 
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                        >
+                          삭제
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 모바일: 카드 */}
+            <div className="sm:hidden divide-y divide-gray-200 dark:divide-gray-700">
+              {locations.map(loc => (
+                <div key={loc.id} className="p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h4 className="font-semibold text-gray-900 dark:text-white">{loc.name}</h4>
+                    <button 
+                      onClick={() => onDelete(loc.id, loc.name)} 
+                      className="text-red-600 dark:text-red-400 text-sm font-medium ml-2"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                    {loc.description || '설명 없음'}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    등록일: {new Date(loc.created_at).toLocaleDateString('ko-KR')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Date, Numeric, E
 import enum
 from sqlalchemy.sql import func
 from app.database import Base
+from sqlalchemy.orm import relationship  # 🔥 이 줄 추가!
 
 # 자산 상태 Enum
 class AssetStatus(str, enum.Enum):
@@ -31,6 +32,9 @@ class Asset(Base):
     last_inspection_date = Column(Date)
     next_inspection_date = Column(Date)
     
+    
     notes = Column(Text)
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    
+    issues = relationship("Issue", back_populates="asset")

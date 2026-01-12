@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from datetime import datetime
 from app.database import get_db
 from app.models import issue as models
+from app.models.asset import Asset
 from app.models.user import User
 from app.schemas import issue as schemas
 from app.core.security import get_current_user
-from app.api.notifications import create_notification  # 알림 함수 import
+from app.api.notifications import create_notification
 
 router = APIRouter(prefix="/api/issues", tags=["Issues"])
 
@@ -18,7 +19,25 @@ class BulkDeleteRequest(BaseModel):
 
 @router.post("/", response_model=schemas.Issue)
 def create_issue(issue: schemas.IssueCreate, db: Session = Depends(get_db)):
-    db_issue = models.Issue(**issue.dict())
+    # 🔥 asset_number로 asset_id 찾기
+    asset = None
+    asset_id = None
+    if issue.asset_number:
+        asset = db.query(Asset).filter(Asset.asset_number == issue.asset_number).first()
+        if asset:
+            asset_id = asset.id
+    
+    # 🔥 asset_id 포함해서 생성
+    db_issue = models.Issue(
+        title=issue.title,
+        description=issue.description,
+        priority=issue.priority,
+        reporter=issue.reporter,
+        assignee=issue.assignee,
+        asset_number=issue.asset_number,
+        asset_id=asset_id  # 🔥 추가!
+    )
+    
     db.add(db_issue)
     db.commit()
     db.refresh(db_issue)
@@ -38,7 +57,12 @@ def create_issue(issue: schemas.IssueCreate, db: Session = Depends(get_db)):
 
 @router.get("/", response_model=List[schemas.Issue])
 def get_issues(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    issues = db.query(models.Issue).offset(skip).limit(limit).all()
+    # 🔥 asset 정보도 함께 로드! (joinedload 사용)
+    issues = db.query(models.Issue)\
+        .options(joinedload(models.Issue.asset))\
+        .offset(skip)\
+        .limit(limit)\
+        .all()
     return issues
 
 @router.delete("/bulk-delete")
@@ -67,7 +91,12 @@ def bulk_delete_issues(
 
 @router.get("/{issue_id}", response_model=schemas.Issue)
 def get_issue(issue_id: int, db: Session = Depends(get_db)):
-    issue = db.query(models.Issue).filter(models.Issue.id == issue_id).first()
+    # 🔥 asset 정보도 함께 로드!
+    issue = db.query(models.Issue)\
+        .options(joinedload(models.Issue.asset))\
+        .filter(models.Issue.id == issue_id)\
+        .first()
+    
     if not issue:
         raise HTTPException(status_code=404, detail="Issue not found")
     return issue
@@ -82,9 +111,21 @@ def update_issue(issue_id: int, issue_update: schemas.IssueUpdate, db: Session =
     old_assignee = db_issue.assignee
     old_status = db_issue.status
     
+    # 🔥 asset_number가 변경되면 asset_id도 업데이트
+    if issue_update.asset_number is not None:
+        if issue_update.asset_number:
+            asset = db.query(Asset).filter(Asset.asset_number == issue_update.asset_number).first()
+            if asset:
+                db_issue.asset_id = asset.id
+            else:
+                db_issue.asset_id = None
+        else:
+            db_issue.asset_id = None
+    
     # 업데이트
     for key, value in issue_update.dict(exclude_unset=True).items():
-        setattr(db_issue, key, value)
+        if key != 'asset_number' or value is not None:  # asset_number는 위에서 처리
+            setattr(db_issue, key, value)
     
     # 상태가 resolved로 변경되면 resolved_at 설정
     if issue_update.status == "resolved" and not db_issue.resolved_at:
@@ -96,7 +137,7 @@ def update_issue(issue_id: int, issue_update: schemas.IssueUpdate, db: Session =
     # 알림 생성
     # 1. 담당자가 변경된 경우 - 새 담당자에게 알림
     if issue_update.assignee and issue_update.assignee != old_assignee:
-        if issue_update.assignee != db_issue.reporter:  # 신고자와 다른 경우만
+        if issue_update.assignee != db_issue.reporter:
             create_notification(
                 db=db,
                 username=issue_update.assignee,
