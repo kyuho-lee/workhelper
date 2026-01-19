@@ -24,6 +24,18 @@ def get_assets(db: Session = Depends(get_db)):
     assets = db.query(Asset).all()
     return assets
 
+
+@router.get("/by-number/{asset_number}", response_model=AssetSchema)  # AssetResponse → AssetSchema
+def get_asset_by_number(
+    asset_number: str,
+    db: Session = Depends(get_db)
+):
+    """자산번호로 자산 조회"""
+    asset = db.query(Asset).filter(Asset.asset_number == asset_number).first()
+    if not asset:
+        raise HTTPException(status_code=404, detail="자산을 찾을 수 없습니다")
+    return asset
+
 @router.get("/{asset_id}", response_model=AssetSchema)
 def get_asset(asset_id: int, db: Session = Depends(get_db)):
     asset = db.query(Asset).filter(Asset.id == asset_id).first()
@@ -186,4 +198,3 @@ async def bulk_upload_assets(file: UploadFile = File(...), db: Session = Depends
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"파일 처리 중 오류: {str(e)}")
-

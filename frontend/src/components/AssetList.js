@@ -334,14 +334,17 @@ function AssetList() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-white">자산 관리</h2>
-        <div className="flex gap-2">
-          <Link to="/assets/bulk-upload" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
-            📤 일괄 업로드
-          </Link>
-          <Link to="/assets/new" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-            + 자산 추가
-          </Link>
-        </div>
+        {/* 🔥 관리자만: 일괄 업로드, 자산 추가 버튼 */}
+        {isAdmin && (
+          <div className="flex gap-2">
+            <Link to="/assets/bulk-upload" className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">
+              📤 일괄 업로드
+            </Link>
+            <Link to="/assets/new" className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+              + 자산 추가
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* 검색 및 필터 */}
@@ -398,6 +401,7 @@ function AssetList() {
                 🔄 초기화
               </button>
               
+              {/* 🔥 관리자만: 필터 관리 버튼 */}
               {isAdmin && (
                 <button
                   onClick={() => setShowFilterManagement(true)}
@@ -415,7 +419,7 @@ function AssetList() {
         )}
       </div>
 
-      {/* 일괄 삭제 */}
+      {/* 🔥 관리자만: 일괄 삭제 */}
       {isAdmin && selectedAssets.length > 0 && (
         <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg flex items-center justify-between">
           <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -437,12 +441,15 @@ function AssetList() {
             {indexOfFirstItem + 1} - {Math.min(indexOfLastItem, filteredAssets.length)}
           </span>개 표시
         </div>
-        <button
-          onClick={exportToExcel}
-          className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2"
-        >
-          📊 엑셀 다운로드
-        </button>
+        {/* 🔥 관리자만: 엑셀 다운로드 */}
+        {isAdmin && (
+          <button
+            onClick={exportToExcel}
+            className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded flex items-center gap-2"
+          >
+            📊 엑셀 다운로드
+          </button>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
@@ -456,6 +463,7 @@ function AssetList() {
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-700">
                   <tr>
+                    {/* 🔥 관리자만: 체크박스 컬럼 */}
                     {isAdmin && (
                       <th className="px-6 py-3 text-left">
                         <input
@@ -478,6 +486,7 @@ function AssetList() {
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                   {currentItems.map((asset) => (
                     <tr key={asset.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                      {/* 🔥 관리자만: 체크박스 */}
                       {isAdmin && (
                         <td className="px-6 py-4 whitespace-nowrap">
                           <input
@@ -518,18 +527,23 @@ function AssetList() {
                         >
                           상세
                         </Link>
-                        <Link 
-                          to={`/assets/edit/${asset.id}`}
-                          className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                        >
-                          수정
-                        </Link>
-                        <button 
-                          onClick={() => deleteAsset(asset.id)}
-                          className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          삭제
-                        </button>
+                        {/* 🔥 관리자만: 수정, 삭제 */}
+                        {isAdmin && (
+                          <>
+                            <Link 
+                              to={`/assets/edit/${asset.id}`}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
+                            >
+                              수정
+                            </Link>
+                            <button 
+                              onClick={() => deleteAsset(asset.id)}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                            >
+                              삭제
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -714,12 +728,15 @@ function AssetList() {
 
             {/* 푸터 */}
             <div className="sticky bottom-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 px-6 py-4 flex gap-2 justify-end">
-              <Link
-                to={`/assets/edit/${quickViewAsset.id}`}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                수정하기
-              </Link>
+              {/* 🔥 관리자만: 수정하기 버튼 */}
+              {isAdmin && (
+                <Link
+                  to={`/assets/edit/${quickViewAsset.id}`}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                >
+                  수정하기
+                </Link>
+              )}
               <button
                 onClick={closeQuickView}
                 className="bg-gray-300 hover:bg-gray-400 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-800 dark:text-white px-4 py-2 rounded"

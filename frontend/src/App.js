@@ -25,9 +25,12 @@ import Notifications from './components/Notifications';
 import Reports from './components/Reports';
 import MobileQRScanner from './components/MobileQRScanner';
 import InspectionList from './components/InspectionList';
-import QRPrintPage from './components/QRPrintPage'; // 🔥 추가
+import QRPrintPage from './components/QRPrintPage';
 
-//import ActivityMonitor from './components/ActivityMonitor';
+// 🔥 새로 추가된 모바일 컴포넌트들
+import QRActionSelector from './components/QRActionSelector';
+import MobileAssetView from './components/MobileAssetView';
+import MobileInspection from './components/MobileInspection';
 
 function AppContent() {
   const { isAuthenticated, user, logout, isAdmin } = useAuth();
@@ -89,35 +92,62 @@ function AppContent() {
               {/* 데스크톱 네비게이션 (md 이상에서만 표시) */}
               <div className="hidden md:flex items-center gap-6">
                 <nav className="flex gap-6">
-                  <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
-                    대시보드
-                  </Link>
+                  {/* 🔥 관리자만: 대시보드 */}
+                  {isAdmin && (
+                    <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                      대시보드
+                    </Link>
+                  )}
+                  
+                  {/* 모든 사용자: 자산관리 */}
                   <Link to="/assets" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                     자산관리
                   </Link>
+                  
+                  {/* 모든 사용자: 장애처리 */}
                   <Link to="/issues" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                     장애처리
                   </Link>
-                  <Link to="/statistics" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
-                    통계
+                  
+                  {/* 🔥 관리자만: 통계 */}
+                  {isAdmin && (
+                    <Link to="/statistics" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                      통계
+                    </Link>
+                  )}
+                  
+                  {/* 🔥 관리자만: 재고실사 */}
+                  {isAdmin && (
+                    <Link to="/inspections" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                      📋 재고실사
+                    </Link>
+                  )}
+                  
+                  {/* 모든 사용자: QR스캔 */}
+                  <Link to="/mobile/qr-scan" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                    📱 QR스캔
                   </Link>
-                  <Link to="/inspections" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
-                    📋 재고실사
-                  </Link>
-                  {/* 🔥 QR 일괄 인쇄 메뉴 추가 */}
+                  
+                  {/* 🔥 관리자만: QR인쇄 */}
                   {isAdmin && (
                     <Link to="/qr-print" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                       🖨️ QR인쇄
                     </Link>
                   )}
+                  
+                  {/* 🔥 관리자만: 설정 */}
                   {isAdmin && (
                     <Link to="/settings" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
                       ⚙️ 설정
                     </Link>
                   )}
-                  <Link to="/reports" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
-                    보고서
-                  </Link>
+                  
+                  {/* 🔥 관리자만: 보고서 */}
+                  {isAdmin && (
+                    <Link to="/reports" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium">
+                      보고서
+                    </Link>
+                  )}
                 </nav>
                 
                 <div className="flex items-center gap-3">
@@ -191,13 +221,18 @@ function AppContent() {
             {mobileMenuOpen && (
               <div className="md:hidden mt-4 pb-4 border-t dark:border-gray-700 pt-4">
                 <nav className="flex flex-col gap-3">
-                  <Link 
-                    to="/" 
-                    onClick={closeMobileMenu}
-                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
-                  >
-                    🏠 대시보드
-                  </Link>
+                  {/* 🔥 관리자만: 대시보드 */}
+                  {isAdmin && (
+                    <Link 
+                      to="/" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      🏠 대시보드
+                    </Link>
+                  )}
+                  
+                  {/* 모든 사용자: 자산관리 */}
                   <Link 
                     to="/assets" 
                     onClick={closeMobileMenu}
@@ -205,6 +240,8 @@ function AppContent() {
                   >
                     💼 자산관리
                   </Link>
+                  
+                  {/* 모든 사용자: 장애처리 */}
                   <Link 
                     to="/issues" 
                     onClick={closeMobileMenu}
@@ -212,21 +249,39 @@ function AppContent() {
                   >
                     🚨 장애처리
                   </Link>
+                  
+                  {/* 🔥 관리자만: 통계 */}
+                  {isAdmin && (
+                    <Link 
+                      to="/statistics" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      📊 통계
+                    </Link>
+                  )}
+                  
+                  {/* 🔥 관리자만: 재고실사 */}
+                  {isAdmin && (
+                    <Link 
+                      to="/inspections" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      📋 재고실사
+                    </Link>
+                  )}
+                  
+                  {/* 모든 사용자: QR 스캔 */}
                   <Link 
-                    to="/statistics" 
+                    to="/mobile/qr-scan" 
                     onClick={closeMobileMenu}
-                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2 bg-green-50 dark:bg-green-900/30 rounded-lg px-3"
                   >
-                    📊 통계
+                    📱 QR 스캔
                   </Link>
-                  <Link 
-                    to="/inspections" 
-                    onClick={closeMobileMenu}
-                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
-                  >
-                    📋 재고실사
-                  </Link>
-                  {/* 🔥 모바일 메뉴에도 QR 인쇄 추가 */}
+                  
+                  {/* 🔥 관리자만: QR 인쇄 */}
                   {isAdmin && (
                     <Link 
                       to="/qr-print" 
@@ -236,6 +291,8 @@ function AppContent() {
                       🖨️ QR 일괄 인쇄
                     </Link>
                   )}
+                  
+                  {/* 🔥 관리자만: 설정 */}
                   {isAdmin && (
                     <Link 
                       to="/settings" 
@@ -245,13 +302,17 @@ function AppContent() {
                       ⚙️ 설정
                     </Link>
                   )}
-                  <Link 
-                    to="/reports" 
-                    onClick={closeMobileMenu}
-                    className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
-                  >
-                    📄 보고서
-                  </Link>
+                  
+                  {/* 🔥 관리자만: 보고서 */}
+                  {isAdmin && (
+                    <Link 
+                      to="/reports" 
+                      onClick={closeMobileMenu}
+                      className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 font-medium py-2"
+                    >
+                      📄 보고서
+                    </Link>
+                  )}
                   
                   <div className="border-t dark:border-gray-700 my-2"></div>
                   
@@ -280,33 +341,46 @@ function AppContent() {
 
         <main className="max-w-7xl mx-auto px-4 py-6">
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            {/* 🔥 대시보드: 관리자는 대시보드, 일반 사용자는 자산목록으로 */}
+            <Route path="/" element={isAdmin ? <Dashboard /> : <Navigate to="/assets" replace />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/users" element={<UserManagement />} />
             
+            {/* 🔥 관리자만: 사용자 관리 */}
+            <Route path="/users" element={isAdmin ? <UserManagement /> : <Navigate to="/assets" replace />} />
+            
+            {/* 자산 관련 */}
             <Route path="/assets" element={<AssetList />} />
-            <Route path="/assets/new" element={<AssetForm />} />
-            <Route path="/assets/bulk-upload" element={<AssetBulkUpload />} />
+            <Route path="/assets/new" element={isAdmin ? <AssetForm /> : <Navigate to="/assets" replace />} />
+            <Route path="/assets/bulk-upload" element={isAdmin ? <AssetBulkUpload /> : <Navigate to="/assets" replace />} />
             <Route path="/assets/:id" element={<AssetDetail />} />
-            <Route path="/assets/edit/:id" element={<AssetEdit />} />
+            <Route path="/assets/edit/:id" element={isAdmin ? <AssetEdit /> : <Navigate to="/assets" replace />} />
             
+            {/* 장애 관련 */}
             <Route path="/issues" element={<IssueList />} />
             <Route path="/issues/new" element={<IssueForm />} />
             <Route path="/issues/edit/:id" element={<IssueEdit />} />
             
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/dashboard-settings" element={<DashboardSettings />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/reports" element={<Reports />} />
+            {/* 🔥 관리자만: 통계, 대시보드 설정, 설정, 보고서 */}
+            <Route path="/statistics" element={isAdmin ? <Statistics /> : <Navigate to="/assets" replace />} />
+            <Route path="/dashboard-settings" element={isAdmin ? <DashboardSettings /> : <Navigate to="/assets" replace />} />
+            <Route path="/settings" element={isAdmin ? <Settings /> : <Navigate to="/assets" replace />} />
+            <Route path="/reports" element={isAdmin ? <Reports /> : <Navigate to="/assets" replace />} />
             
-            {/* 재고 실사 */}
-            <Route path="/inspections" element={<InspectionList />} />
+            {/* 🔥 관리자만: 재고 실사 목록 */}
+            <Route path="/inspections" element={isAdmin ? <InspectionList /> : <Navigate to="/assets" replace />} />
+            
+            {/* 모바일 QR 관련 (모든 사용자) */}
+            <Route path="/mobile/qr-scan" element={<QRActionSelector />} />
+            <Route path="/mobile/asset/:assetNumber" element={<MobileAssetView />} />
+            <Route path="/mobile/inspection/:assetNumber" element={<MobileInspection />} />
+            
+            {/* 기존 모바일 스캔 (하위 호환성 유지) */}
             <Route path="/mobile/scan" element={<MobileQRScanner />} />
             
-            {/* 🔥 QR 일괄 인쇄 - 관리자만 */}
-            <Route path="/qr-print" element={isAdmin ? <QRPrintPage /> : <Navigate to="/" replace />} />
+            {/* 🔥 관리자만: QR 일괄 인쇄 */}
+            <Route path="/qr-print" element={isAdmin ? <QRPrintPage /> : <Navigate to="/assets" replace />} />
             
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to={isAdmin ? "/" : "/assets"} replace />} />
           </Routes>
         </main>
 
