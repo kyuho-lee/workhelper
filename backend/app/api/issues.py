@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
@@ -10,6 +10,7 @@ from app.models.user import User
 from app.schemas import issue as schemas
 from app.core.security import get_current_user
 from app.api.notifications import create_notification
+from app.services.webhook import send_kakao_notification  # 카카오톡 알림 추가!
 
 router = APIRouter(prefix="/api/issues", tags=["Issues"])
 
@@ -18,7 +19,11 @@ class BulkDeleteRequest(BaseModel):
     issue_ids: List[int]
 
 @router.post("/", response_model=schemas.Issue)
-def create_issue(issue: schemas.IssueCreate, db: Session = Depends(get_db)):
+async def create_issue(
+    issue: schemas.IssueCreate, 
+    background_tasks: BackgroundTasks,  # 백그라운드 태스크 추가!
+    db: Session = Depends(get_db)
+):
     # 🔥 asset_number로 asset_id 찾기
     asset = None
     asset_id = None
@@ -52,6 +57,14 @@ def create_issue(issue: schemas.IssueCreate, db: Session = Depends(get_db)):
             notification_type="issue",
             related_id=db_issue.id
         )
+    
+    # 🔥 카카오톡 알림 전송 (백그라운드에서 비동기 처리)
+    background_tasks.add_task(
+        send_kakao_notification,
+        notification_type="Issue",
+        title=f"New Issue #{db_issue.id}",
+        message=f"{db_issue.title} (Priority: {db_issue.priority})"
+    )
     
     return db_issue
 
@@ -102,7 +115,12 @@ def get_issue(issue_id: int, db: Session = Depends(get_db)):
     return issue
 
 @router.put("/{issue_id}", response_model=schemas.Issue)
-def update_issue(issue_id: int, issue_update: schemas.IssueUpdate, db: Session = Depends(get_db)):
+async def update_issue(
+    issue_id: int, 
+    issue_update: schemas.IssueUpdate, 
+    background_tasks: BackgroundTasks,  # 백그라운드 태스크 추가!
+    db: Session = Depends(get_db)
+):
     db_issue = db.query(models.Issue).filter(models.Issue.id == issue_id).first()
     if not db_issue:
         raise HTTPException(status_code=404, detail="Issue not found")
@@ -147,7 +165,7 @@ def update_issue(issue_id: int, issue_update: schemas.IssueUpdate, db: Session =
                 related_id=db_issue.id
             )
     
-    # 2. 상태가 변경된 경우 - 신고자에게 알림
+    # 2. 상태가 변경된 경우 - 신고자에게 알림 + 카카오톡 알림
     if issue_update.status and issue_update.status != old_status:
         status_text = {
             'open': '처리중',
@@ -163,6 +181,14 @@ def update_issue(issue_id: int, issue_update: schemas.IssueUpdate, db: Session =
             message=f"'{db_issue.title}' 장애의 상태가 '{status_text}'(으)로 변경되었습니다.",
             notification_type="issue",
             related_id=db_issue.id
+        )
+        
+        # 🔥 카카오톡 알림 - 상태 변경 시
+        background_tasks.add_task(
+            send_kakao_notification,
+            notification_type="Issue Status",
+            title=f"Issue #{db_issue.id} {status_text}",
+            message=f"{db_issue.title}"
         )
     
     return db_issue
