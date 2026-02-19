@@ -9,7 +9,7 @@ from app.database import get_db
 from app.models.asset import Asset
 from app.models.issue import Issue
 from app.models.user import User  # 추가!
-from app.schemas.asset import AssetCreate, Asset as AssetSchema
+from app.schemas.asset import AssetCreate, AssetUpdate, Asset as AssetSchema
 from app.core.security import get_current_user  # 추가!
 
 
@@ -69,14 +69,14 @@ def create_asset(asset: AssetCreate, db: Session = Depends(get_db)):
     return db_asset
 
 @router.put("/{asset_id}", response_model=AssetSchema)
-def update_asset(asset_id: int, asset: AssetCreate, db: Session = Depends(get_db)):
+def update_asset(asset_id: int, asset: AssetUpdate, db: Session = Depends(get_db)):
     db_asset = db.query(Asset).filter(Asset.id == asset_id).first()
     if not db_asset:
         raise HTTPException(status_code=404, detail="Asset not found")
-    
-    for key, value in asset.dict().items():
+
+    for key, value in asset.dict(exclude_unset=True).items():
         setattr(db_asset, key, value)
-    
+
     db.commit()
     db.refresh(db_asset)
     return db_asset

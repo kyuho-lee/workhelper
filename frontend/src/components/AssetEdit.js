@@ -85,11 +85,17 @@ function AssetEdit() {
     }
 
     try {
-      await axios.put(`${API_BASE_URL}/api/assets/${id}`, formData);
+      const submitData = {};
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === 'asset_number') return;
+        submitData[key] = value === '' ? null : value;
+      });
+
+      await axios.put(`${API_BASE_URL}/api/assets/${id}`, submitData);
       alert('자산이 수정되었습니다.');
       navigate(`/assets/${id}`);
     } catch (error) {
-      alert('수정 실패');
+      alert('수정 실패: ' + (error.response?.data?.detail || error.message));
       console.error(error);
     }
   };
